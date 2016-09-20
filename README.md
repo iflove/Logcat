@@ -48,6 +48,13 @@ Logcat.fv("Hello World!", "MyLog.txt");
 Logcat.fvv("Hello World!!", "MyLog.txt");
 
 ```
+##JCenter
+
+```
+dependencies {
+    compile 'com.lazy.logging:library:0.0.1'
+}
+```
 
 Thanks [KLog](https://github.com/ZhaoKaiQiang/KLog)
 

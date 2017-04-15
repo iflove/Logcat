@@ -38,11 +38,11 @@ public class MyAppication extends Application implements IConstant {
 		Logcat.initialize(this);
 
 		//初始化Logcat 配置更多信息
-//		Builder builder = Logcat.newBuilder();
-//		builder.logSavePath(StorageUtils.getDiskCacheDir(this,"loggg")); //设置Log 保存的文件夹
-//		builder.logCatLogLevel(Logcat.SHOW_INFO_LOG| Logcat.SHOW_ERROR_LOG);//设置日志等级
-//		builder.fileLogLevel(Logcat.NOT_SHOW_LOG); //不显示Log
-//		Logcat.initialize(this, builder.build());
+		Builder builder = Logcat.newBuilder();
+		builder.logSavePath(StorageUtils.getDiskCacheDir(this, "log")); //设置Log 保存的文件夹
+		builder.logCatLogLevel(Logcat.SHOW_INFO_LOG | Logcat.SHOW_ERROR_LOG);//设置日志等级
+		builder.fileLogLevel(Logcat.NOT_SHOW_LOG); //不显示Log
+		Logcat.initialize(this, builder.build());
 
 		if (IS_DEBUG_ACTIVITYLIFE) {
 			mActivityLifecycle = new MyActivityLifecycle();

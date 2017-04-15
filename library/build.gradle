@@ -22,5 +22,5 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:support-annotations:24.2.0'
+    provided 'com.android.support:support-annotations:24.2.0'
 }

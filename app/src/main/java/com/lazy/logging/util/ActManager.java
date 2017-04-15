@@ -10,7 +10,7 @@ import java.util.Stack;
 public class ActManager {
 
 	private static Stack<Activity> activityStack = new Stack<Activity>();
-	;
+
 //    private static ActManager instance = new ActManager();;
 
 	private ActManager() {

@@ -47,12 +47,57 @@ Logcat.fv("Hello World!", "MyLog.txt");
 //控制台+写入Log 文件,且指定 Log文件名
 Logcat.fvv("Hello World!!", "MyLog.txt");
 
+//0.2 版本添加
+Logcat.v().msg("output msg").out();
+Logcat.v().msg("output msg").msg("result = ").msg(2 + 2).out();
+Logcat.v().msgs("output msgs is ", 1, 2, 3).out();
+Logcat.v().tag("newTag").msg("output msg").out();
+Logcat.v().msg("output msg").tag("newTag").msg("result = ").msg(2 + 2).out();
+Logcat.v().msgs("output msgs is ", 1, 2, 3).tag("newTag").out();
+//
+Logcat.v().file().msg("output file msg").out();
+Logcat.v().file().msg("output file msg").msg("result = ").msg(2 + 2).out();
+Logcat.v().file().msgs("output file msgs is ", 1, 2, 3).out();
+Logcat.v().file().tag("newTag").msg("output file msg").out();
+Logcat.v().file().msg("output file msg").tag("newTag").msg("result = ").msg(2 + 2).out();
+Logcat.v().file().msgs("output file msgs is ", 1, 2, 3).tag("newTag").file("newFileName").msg("当然你也可指定文件名 ").out();
+Logcat.e().msg("output error msg").out().ln().msg("Do you see? 。。。。").format("a:%s;b:%s", 2, 3).out();
+//... Test More
+
 ```
+
+###3.LogTransaction 为Logcat 提供灵活的链式调用api
+```java
+
+msg(@NonNull final Object msg);// 打印 msg
+msgs(@NonNull final Object... msg);// n ... msg
+tag(@NonNull final String tag);// 打印 tag
+tags(@NonNull final String... tags); //n ... tag
+file(); // log默认输出到文件
+file(@NonNull final String fileName); //指定文件名
+ln(); //换行
+format(@NonNull final String format, Object... args); //格式化
+out(); //输出log
+```
+
+###4.Logcat log 文件
+```java
+--默认log文件夹 sdcard/Android/data/you.pakeage/cache/logs 下
+
+//文件log 格式
+V/Logcat->newTag 2017-04-15_21:10:17
+fileName:MainActivity.java
+className:com.lazy.logging.MainActivity
+methodName:OnCreate
+lineNumber:78
+output file msg result =  4 
+```
+
 ##JCenter
 
 ```
 dependencies {
-    compile 'com.lazy.logging:library:0.0.1'
+    compile 'com.lazy.logging:library:0.0.2'
 }
 ```
 

@@ -154,6 +154,9 @@ final class LogStackRecord extends LogTransaction {
 
 
     private void doOp(int opCmd, Object object) {
+        if (object == null) {
+            object = "null";
+        }
         Op op = new Op();
         op.cmd = opCmd;
         op.obj = object;

@@ -86,22 +86,23 @@ public final class Logcat {
     public static final String TAG_SEPARATOR = "->";
     public static final String DEFAULT_LOG_DIR = "logs";
 
+    public static final char SHOW_ALL_LOG =
+            SHOW_VERBOSE_LOG |
+                    SHOW_DEBUG_LOG |
+                    SHOW_INFO_LOG |
+                    SHOW_WARN_LOG |
+                    SHOW_ERROR_LOG |
+                    SHOW_JSON_LOG;
+
+    public static final char SHOW_FILE_LOG = 0x01;
+
     //    // 默认为五种日志类型均在 LogCat 中输出显示
-    private static char m_cLogCatShowLogType = SHOW_VERBOSE_LOG |
-            SHOW_DEBUG_LOG |
-            SHOW_INFO_LOG |
-            SHOW_WARN_LOG |
-            SHOW_ERROR_LOG |
-            SHOW_JSON_LOG;
+    private static char m_cLogCatShowLogType = SHOW_ALL_LOG;
 
     // 默认为五种日志类型均在 日志文件 中输出保存
 
     // 以下注释不要删除，以便日后开启指定日志类型输出到日志文件中
-    private static char m_cFileSaveLogType = SHOW_VERBOSE_LOG |
-            SHOW_DEBUG_LOG |
-            SHOW_INFO_LOG |
-            SHOW_WARN_LOG |
-            SHOW_ERROR_LOG;
+    private static char m_cFileSaveLogType = SHOW_ALL_LOG;
 
     // 存放日志文件的目录全路径
     public static String sLogFolderPath = "";
@@ -134,9 +135,6 @@ public final class Logcat {
         throw new UnsupportedOperationException();
     }
 
-    /**
-     * @param context
-     */
     public static void initialize(@NonNull Context context) {
         mContext = context.getApplicationContext();
         initialize(context, defaultConfig());
@@ -253,61 +251,56 @@ public final class Logcat {
 
 
     //1.控制台Log
-
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void v(Object msg, String... tag) {
+    public static void v(String tag, Object msg) {
         consoleLog(SHOW_VERBOSE_LOG, msg, tag);
     }
 
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void d(Object msg, String... tag) {
+    public static void d(String tag, Object msg) {
         consoleLog(SHOW_DEBUG_LOG, msg, tag);
     }
 
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void i(Object msg, String... tag) {
+    public static void i(String tag, Object msg) {
         consoleLog(SHOW_INFO_LOG, msg, tag);
     }
 
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void w(Object msg, String... tag) {
+    public static void w(String tag, Object msg) {
         consoleLog(SHOW_WARN_LOG, msg, tag);
     }
 
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void e(Object msg, String... tag) {
+    public static void e(String tag, Object msg) {
         consoleLog(SHOW_ERROR_LOG, msg, tag);
     }
 
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void json(String msg, String... tag) {
+    public static void json(String tag, String msg) {
+        consoleLog(SHOW_JSON_LOG, msg, tag);
+    }
+
+    public static void v(Object msg, final String... tag) {
+        consoleLog(SHOW_VERBOSE_LOG, msg, tag);
+    }
+
+    public static void d(Object msg, final String... tag) {
+        consoleLog(SHOW_DEBUG_LOG, msg, tag);
+    }
+
+    public static void i(Object msg, final String... tag) {
+        consoleLog(SHOW_INFO_LOG, msg, tag);
+    }
+
+    public static void w(Object msg, final String... tag) {
+        consoleLog(SHOW_WARN_LOG, msg, tag);
+    }
+
+    public static void e(Object msg, final String... tag) {
+        consoleLog(SHOW_ERROR_LOG, msg, tag);
+    }
+
+    public static void json(String msg, final String... tag) {
         consoleLog(SHOW_JSON_LOG, msg, tag);
     }
 
     //2.仅输出到默认Log文件
 
-    /**
-     * @param msg
-     * @param tag
-     */
     public static void vv(final Object msg, final String... tag) {
         writeLog(SHOW_VERBOSE_LOG, msg, null, tag);
     }
@@ -653,7 +646,7 @@ public final class Logcat {
         stringBuilder.append("[ (").append(fileName).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
 
         if (objectMsg == null) {
-            msg = "LogTransaction with null Object";
+            msg = "null";
         } else {
             msg = objectMsg.toString();
         }
@@ -760,7 +753,7 @@ public final class Logcat {
      * @param msg
      * @param tag
      */
-    private static void consoleLog(@LockLevel final int logLevel, Object msg, String[] tag) {
+    private static void consoleLog(@LockLevel final int logLevel, Object msg, String... tag) {
         //当前线程的堆栈情况
         consoleLog(logLevel, getStackTraceElement(INDEX), msg, tag);
     }
@@ -860,7 +853,7 @@ public final class Logcat {
 
 
         if (objectMsg == null) {
-            msg = "LogTransaction with null Object";
+            msg = "null";
         } else {
             msg = objectMsg.toString();
         }

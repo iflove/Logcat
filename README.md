@@ -97,7 +97,7 @@ output file msg result =  4
 
 ```
 dependencies {
-    compile 'com.lazy.logging:library:0.0.2'
+    compile 'com.lazy.logging:library:0.0.3'
 }
 ```
 

@@ -39,7 +39,7 @@ builder.fileLogLevel(Logcat.NOT_SHOW_LOG);
 Logcat.initialize(this, builder.build());
 ```
 
-### 2.开始使用Logcat
+### 2.示例
 
 ```java
 //控制台

@@ -42,14 +42,11 @@ import java.util.concurrent.Executors;
 
 /**
  * <ol>
- * <li>仅输出Log ->控制台   {@link Logcat#v(String, Object)}</li>
+ * <li>输出Log ->控制台   {@link Logcat#v(Object)}</li>
+ * <li>输出Log ->控制台   {@link Logcat#v(String, Object)}</li>
+ * <li>输出Log ->控制台 (LogTransaction 为Logcat 提供强大而灵活的链式调用api)  {@link  LogTransaction}</li>
+ * <p>
  * </ol>
- * 1.具有 Android LogTransaction 的功能
- * <p/>
- * 2.具有写Log 到文件,同时能设置Log 的文件夹,LogTransaction 文件名的功能
- * <p/>
- * 3.能控制Log的等级输出
- * <p/>
  *
  * @author Lazy
  */
@@ -77,12 +74,12 @@ public final class Logcat {
     public static final char NOT_SHOW_LOG = 0;
 
     //日志级别
-    public static final String V = "V/";
-    public static final String D = "D/";
-    public static final String I = "I/";
-    public static final String W = "W/";
-    public static final String E = "E/";
-    public static final String JSON = "JSON/";
+    private static final String V = "V/";
+    private static final String D = "D/";
+    private static final String I = "I/";
+    private static final String W = "W/";
+    private static final String E = "E/";
+    private static final String JSON = "JSON/";
 
     //Tag 分割符号
     private static final String TAG_SEPARATOR = "->";
@@ -360,7 +357,7 @@ public final class Logcat {
         String logStr = stringBuilder.toString();
         if (type == SHOW_JSON_LOG) {
             if (TextUtils.isEmpty(msg)) {
-                Log.d(tag, "Empty or Null json content");
+                Log.e(tag, "Empty or Null json content");
                 return;
             }
 
@@ -386,7 +383,7 @@ public final class Logcat {
             for (String line : lines) {
                 jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
             }
-            Log.d(JSON + tag, jsonContent.toString());
+            Log.i(JSON + tag, jsonContent.toString());
             printLine(JSON + tag, false);
         } else {
             int index = 0;
@@ -657,9 +654,9 @@ public final class Logcat {
 
     private static void printLine(String tag, boolean isTop) {
         if (isTop) {
-            Log.d(tag, "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
+            Log.i(tag, "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
         } else {
-            Log.d(tag, "╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
+            Log.i(tag, "╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
         }
     }
 

@@ -85,8 +85,6 @@ output file msg result =  4
 [ScreenShot-2017-12-05.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/ScreenShot-2017-12-05.png
 
 
-Thanks [KLog](https://github.com/ZhaoKaiQiang/KLog)
-
 ## License
 
 ```

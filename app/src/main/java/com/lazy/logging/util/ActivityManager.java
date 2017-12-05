@@ -1,49 +1,38 @@
 package com.lazy.logging.util;
 
 import android.app.Activity;
+import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 
 import java.util.Stack;
 
 /**
+ * author : rentianlong
+ * add date : 2016/12/12
  * activity堆栈式管理
  */
-public class ActManager {
+public class ActivityManager {
 
 	private static Stack<Activity> activityStack = new Stack<Activity>();
 
-//    private static ActManager instance = new ActManager();;
 
-	private ActManager() {
-	}
+    private ActivityManager() {
+    }
 
-	/**
-	 * 单一实例
-	 */
-//    public static ActManager getActManager() {
-//        if (instance == null) {
-//            instance = new ActManager();
-//        }
-//
-//        if (activityStack == null) {
-//            activityStack = new Stack<Activity>();
-//        }
-//
-//        return instance;
-//    }
 
 	/**
 	 * 获取指定的Activity
-	 *
-	 * @author kymjs
 	 */
 	public static Activity getActivity(Class<?> cls) {
-		if (activityStack != null)
-			for (Activity activity : activityStack) {
-				if (activity.getClass().equals(cls)) {
-					return activity;
-				}
-			}
-		return null;
+        if (activityStack != null) {
+            for (Activity activity : activityStack) {
+                if (activity.getClass().equals(cls)) {
+                    return activity;
+                }
+            }
+        }
+        return null;
 	}
 
 	/**
@@ -57,16 +46,29 @@ public class ActManager {
 	 * 获取当前Activity（堆栈中最后一个压入的）
 	 */
 	public static Activity currentActivity() {
-		Activity activity = activityStack.lastElement();
-		return activity;
-	}
+        if (activityStack.isEmpty()) {
+            return null;
+        }
+        return activityStack.lastElement();
+    }
 
 	/**
 	 * 获取当前Activity（堆栈中第一个压入的）
 	 */
 	public static Activity topActivity() {
-		return activityStack.firstElement();
+        if (activityStack.isEmpty()) {
+            return null;
+        }
+        return activityStack.firstElement();
 	}
+
+    public static boolean activityTopStackIsEmpty() {
+        return activityStack.isEmpty();
+    }
+
+    public static boolean activityTopStackIsNotEmpty() {
+        return activityStack.isEmpty();
+    }
 
 	/**
 	 * 结束当前Activity（堆栈中最后一个压入的）
@@ -130,8 +132,8 @@ public class ActManager {
 	/**
 	 * 退出应用程序
 	 */
-	public static void AppExit() {
-		try {
+    public static void exitApp() {
+        try {
 			finishAllActivity();
 			// 杀死该应用进程
 			android.os.Process.killProcess(android.os.Process.myPid());
@@ -140,4 +142,13 @@ public class ActManager {
 			e.printStackTrace();
 		}
 	}
+
+    @Nullable
+    public static FragmentManager getSupportFragmentManager(Class<? extends FragmentActivity> cls) {
+        Activity activity = getActivity(cls);
+        if (activity instanceof FragmentActivity) {
+            return ((FragmentActivity) activity).getSupportFragmentManager();
+        }
+        return null;
+    }
 }

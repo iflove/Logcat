@@ -15,7 +15,6 @@ import com.lazy.logging.BuildConfig;
 import com.lazy.logging.MyFragmentLifecycle;
 import com.lazy.logging.app.MyAppication;
 import com.lazy.logging.interfaces.BaseViewInterface;
-import com.lazy.logging.interfaces.IConstant;
 import com.lazy.logging.interfaces.fragment.FragmentLifecycleCallbacks;
 import com.umeng.analytics.MobclickAgent;
 
@@ -24,9 +23,11 @@ import butterknife.Unbinder;
 
 
 /**
- * Created by lazy on 16/8/14.
+ *
+ * @author lazy
+ * @date 16/8/14
  */
-public abstract class BaseFragment extends Fragment implements IConstant, BaseViewInterface {
+public abstract class BaseFragment extends Fragment implements BaseViewInterface {
     protected final String TAG = this.getClass().getCanonicalName();
     /**
      * Acitivity对象

@@ -109,7 +109,10 @@ final class LogStackRecord extends LogTransaction {
                     String format = String.format(pair.first, pair.second.toArray());
                     msgsList.add(format);
                     break;
+                default:
+                    break;
             }
+
             mHead = mHead.next;
             if (mHead != null) {
                 mHead.prev = null;
@@ -133,9 +136,9 @@ final class LogStackRecord extends LogTransaction {
 
 
         if (hasFile) {
-            Logcat.writeLog(logLevel.value, Logcat.INDEX, msg, filesName, tags);
+            Logcat.writeLog(logLevel.value, msg, filesName, tags);
         }
-        Logcat.consoleLog(logLevel.value, Logcat.INDEX, msg, tags);
+        Logcat.consoleLog(logLevel.value, msg, tags);
 
         return this;
     }

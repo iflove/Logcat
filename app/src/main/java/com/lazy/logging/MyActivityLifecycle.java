@@ -16,43 +16,43 @@ public class MyActivityLifecycle implements Application.ActivityLifecycleCallbac
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
         String simpleName = activity.getClass().getSimpleName();
-        Logcat.d(simpleName + ": onActivityCreated", TAG, simpleName);
+        Logcat.i().tag(TAG).tag(simpleName).msg(simpleName).msg(": onActivityCreated").out();
     }
 
     @Override
     public void onActivityStarted(Activity activity) {
         String simpleName = activity.getClass().getSimpleName();
-        Logcat.d(simpleName + ": onActivityStarted", TAG, simpleName);
+        Logcat.i().tag(TAG).tag(simpleName).msg(simpleName).msg(": onActivityStarted").out();
     }
 
     @Override
     public void onActivityResumed(Activity activity) {
         String simpleName = activity.getClass().getSimpleName();
-        Logcat.d(simpleName + ": onActivityResumed", TAG, simpleName);
+        Logcat.i().tag(TAG).tag(simpleName).msg(simpleName).msg(": onActivityResumed").out();
     }
 
     @Override
     public void onActivityPaused(Activity activity) {
         String simpleName = activity.getClass().getSimpleName();
-        Logcat.d(simpleName + ": onActivityPaused", TAG, simpleName);
+        Logcat.i().tag(TAG).tag(simpleName).msg(simpleName).msg(": onActivityPaused").out();
     }
 
     @Override
     public void onActivityStopped(Activity activity) {
         String simpleName = activity.getClass().getSimpleName();
-        Logcat.d(simpleName + ": onActivityStopped", TAG, simpleName);
+        Logcat.i().tag(TAG).tag(simpleName).msg(simpleName).msg(": onActivityStopped").out();
     }
 
     @Override
     public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
         String simpleName = activity.getClass().getSimpleName();
-        Logcat.d(simpleName + ": onActivitySaveInstanceState", TAG, simpleName);
+        Logcat.i().tag(TAG).tag(simpleName).msg(simpleName).msg(": onActivitySaveInstanceState").out();
     }
 
     @Override
     public void onActivityDestroyed(Activity activity) {
         String simpleName = activity.getClass().getSimpleName();
-        Logcat.d(simpleName + ": onActivityDestroyed", TAG, simpleName);
+        Logcat.i().tag(TAG).tag(simpleName).msg(simpleName).msg(": onActivityDestroyed").out();
     }
 
 }

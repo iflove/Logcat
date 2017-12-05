@@ -42,11 +42,7 @@ import java.util.concurrent.Executors;
 
 /**
  * <ol>
- * <li>仅输出Log ->控制台   {@link Logcat#v(Object, String...)}</li>
- * <li>仅输出 LogTransaction->文件  {@link Logcat#vv(Object, String...)}</li>
- * <li>输出Log ->控制台,且输出 LogTransaction->文件  {@link Logcat#vvv(Object, String...)}</li>
- * <li>仅输出 LogTransaction->文件,并指定Log 文件名  {@link Logcat#fv(Object, String, String...)}</li>
- * <li>输出Log ->控制台,且输出Log->文件,并指定Log 文件名  {@link Logcat#fvv(Object, String, String...)}</li>
+ * <li>仅输出Log ->控制台   {@link Logcat#v(String, Object)}</li>
  * </ol>
  * 1.具有 Android LogTransaction 的功能
  * <p/>
@@ -57,22 +53,28 @@ import java.util.concurrent.Executors;
  *
  * @author Lazy
  */
-//@SuppressWarnings("ALL")
 public final class Logcat {
-    //1 级 Tag
-    public static final String TAG = "Logcat";
+    /**
+     * 1 级 Tag
+     */
+    private static final String TAG = "Logcat";
 
-    // 日志类型标识符(优先级：由低到高排列，取值越小优先级越高)
+    /**
+     * 日志类型标识符(优先级：由低到高排列，取值越小优先级越高)
+     */
     public static final char SHOW_VERBOSE_LOG = 0x01;
     public static final char SHOW_DEBUG_LOG = 0x01 << 1;
     public static final char SHOW_INFO_LOG = 0x01 << 2;
     public static final char SHOW_WARN_LOG = 0x01 << 3;
     public static final char SHOW_ERROR_LOG = 0x01 << 4;
-    //增加json 数据输出处理
+    /**
+     * 增加json 数据格式化输出处理
+     */
     public static final char SHOW_JSON_LOG = 0x01 << 5;
-    //位运算
-    public static final char OPERATION_BIT = 0; //不显示 某级别Log
-    public static final char NOT_SHOW_LOG = 0; //不显示 LogTransaction
+    /**
+     * 不显示Log
+     */
+    public static final char NOT_SHOW_LOG = 0;
 
     //日志级别
     public static final String V = "V/";
@@ -83,8 +85,8 @@ public final class Logcat {
     public static final String JSON = "JSON/";
 
     //Tag 分割符号
-    public static final String TAG_SEPARATOR = "->";
-    public static final String DEFAULT_LOG_DIR = "logs";
+    private static final String TAG_SEPARATOR = "->";
+    private static final String DEFAULT_LOG_DIR = "logs";
 
     public static final char SHOW_ALL_LOG =
             SHOW_VERBOSE_LOG |
@@ -94,36 +96,48 @@ public final class Logcat {
                     SHOW_ERROR_LOG |
                     SHOW_JSON_LOG;
 
-    public static final char SHOW_FILE_LOG = 0x01;
+    /**
+     * 默认为五种日志类型均在 LogCat 中输出显示
+     */
+    private static char mCLogCatShowLogType = SHOW_ALL_LOG;
 
-    //    // 默认为五种日志类型均在 LogCat 中输出显示
-    private static char m_cLogCatShowLogType = SHOW_ALL_LOG;
+    /**
+     * 默认为五种日志类型均在 日志文件 中输出保存
+     */
+    private static char mCFileSaveLogType = SHOW_ALL_LOG;
 
-    // 默认为五种日志类型均在 日志文件 中输出保存
-
-    // 以下注释不要删除，以便日后开启指定日志类型输出到日志文件中
-    private static char m_cFileSaveLogType = SHOW_ALL_LOG;
-
-    // 存放日志文件的目录全路径
-    public static String sLogFolderPath = "";
-    //Application Context 防止内存泄露
+    /**
+     * 存放日志文件的目录全路径
+     */
+    private static String sLogFolderPath = "";
+    /**
+     * Application Context 防止内存泄露
+     */
     private static Context mContext;
-    //换行符
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-    //文件 separator
-    private static final String FILE_SEPARATOR = File.separator;
 
+    /**
+     * 换行符
+     */
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     private static final int JSON_INDENT = 3;
     private static final String LOGFILE_SUFFIX = ".log";
 
-    //日志打印日期
+    /**
+     * File日志打印日期
+     */
     private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
-    //默认文件Log 文件名
+    /**
+     * 默认文件Log 文件名
+     */
     private static SimpleDateFormat fileSimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-    //单线程 用写文件 防止 anr
+    /**
+     * 单线程 用写文件 防止 anr
+     */
     private static ExecutorService mSingleExecutors = Executors.newSingleThreadExecutor();
-    public static final int INDEX = 5;
+
+    private static final int INDEX = 5;
+    private static final int MAX_LENGTH = 4000;
 
     @IntDef({SHOW_VERBOSE_LOG, SHOW_DEBUG_LOG, SHOW_INFO_LOG,
             SHOW_WARN_LOG, SHOW_ERROR_LOG, SHOW_JSON_LOG, NOT_SHOW_LOG})
@@ -141,28 +155,28 @@ public final class Logcat {
     }
 
     /**
-     * @param context
-     * @param config
+     * @param context Context
+     * @param config  Config
      */
     public static void initialize(@NonNull Context context, @NonNull Config config) {
         mContext = context.getApplicationContext();
-        if (config.logSavePath == null || config.logSavePath.trim().equals("")) {
+        if (config.logSavePath == null || "".equals(config.logSavePath.trim())) {
             defaultConfig();
         } else {
             checkSaveLogPath(config.logSavePath);
         }
         if (config.logCatLogLevel != null) {
-            m_cLogCatShowLogType = config.logCatLogLevel;
+            mCLogCatShowLogType = config.logCatLogLevel;
         }
         if (config.fileLogLevel != null) {
-            m_cFileSaveLogType = config.fileLogLevel;
-            if (m_cFileSaveLogType == NOT_SHOW_LOG)
-                mSingleExecutors = null; //Recycle
+            mCFileSaveLogType = config.fileLogLevel;
+            if (mCFileSaveLogType == NOT_SHOW_LOG) {
+                mSingleExecutors = null;
+            }
         }
-
     }
 
-    public static Config defaultConfig() {
+    private static Config defaultConfig() {
         Builder builder = newBuilder();
 
         // 非循环，只是为了减少分支缩进深度
@@ -183,26 +197,25 @@ public final class Logcat {
             File externalCacheDir = mContext.getExternalCacheDir();
             // context.getExternalCacheDir() maybe null
             if (externalCacheDir != null) {
-                builder.logSavePath = externalCacheDir.getAbsolutePath() + FILE_SEPARATOR + DEFAULT_LOG_DIR;
+                builder.logSavePath = externalCacheDir.getAbsolutePath() + File.separator + DEFAULT_LOG_DIR;
             } else {
                 Log.e(TAG, "externalCacheDir is null!");
-                builder.fileLogLevel(OPERATION_BIT);
+                builder.fileLogLevel(NOT_SHOW_LOG);
                 break;
             }
 
             // 只有存在外部 SD 卡且可写入的情况下才允许保存日志文件到指定目录路径下
-            // 没有指定日志文件存放位置的话，就写到默认位置，即 当前应用 SD 卡根目录下的 Cache/LogTransaction 目录中
+            // 没有指定日志文件存放位置的话，就写到默认位置，即 当前应用 SD 卡根目录下的 Cache/logs 目录中
             String strSaveLogPath = builder.logSavePath;
 
             checkSaveLogPath(strSaveLogPath);
         } while (false);
 
-        Config config = new Config(builder);
-        return config;
+        return new Config(builder);
     }
 
     private static void checkSaveLogPath(@NonNull String strSaveLogPath) {
-        if (sLogFolderPath.trim().equals("")) {
+        if ("".equals(sLogFolderPath.trim())) {
             File fileSaveLogFolderPath = new File(strSaveLogPath);
             // 保存日志文件的路径不存在的话，就创建它
             if (!fileSaveLogFolderPath.exists()) {
@@ -249,8 +262,30 @@ public final class Logcat {
         return new LogStackRecord(LogLevel.Json);
     }
 
+    public static void v(Object msg) {
+        consoleLog(SHOW_VERBOSE_LOG, msg);
+    }
 
-    //1.控制台Log
+    public static void d(Object msg) {
+        consoleLog(SHOW_DEBUG_LOG, msg);
+    }
+
+    public static void i(Object msg) {
+        consoleLog(SHOW_INFO_LOG, msg);
+    }
+
+    public static void w(Object msg) {
+        consoleLog(SHOW_WARN_LOG, msg);
+    }
+
+    public static void e(Object msg) {
+        consoleLog(SHOW_ERROR_LOG, msg);
+    }
+
+    public static void json(String msg) {
+        consoleLog(SHOW_JSON_LOG, msg);
+    }
+
     public static void v(String tag, Object msg) {
         consoleLog(SHOW_VERBOSE_LOG, msg, tag);
     }
@@ -275,352 +310,19 @@ public final class Logcat {
         consoleLog(SHOW_JSON_LOG, msg, tag);
     }
 
-    public static void v(Object msg, final String... tag) {
-        consoleLog(SHOW_VERBOSE_LOG, msg, tag);
-    }
-
-    public static void d(Object msg, final String... tag) {
-        consoleLog(SHOW_DEBUG_LOG, msg, tag);
-    }
-
-    public static void i(Object msg, final String... tag) {
-        consoleLog(SHOW_INFO_LOG, msg, tag);
-    }
-
-    public static void w(Object msg, final String... tag) {
-        consoleLog(SHOW_WARN_LOG, msg, tag);
-    }
-
-    public static void e(Object msg, final String... tag) {
-        consoleLog(SHOW_ERROR_LOG, msg, tag);
-    }
-
-    public static void json(String msg, final String... tag) {
-        consoleLog(SHOW_JSON_LOG, msg, tag);
-    }
-
-    //2.仅输出到默认Log文件
-
-    public static void vv(final Object msg, final String... tag) {
-        writeLog(SHOW_VERBOSE_LOG, msg, null, tag);
-    }
 
     /**
-     * @param msg
-     * @param tag
+     * 输出控制台日志
      */
-    public static void dd(final Object msg, final String... tag) {
-        writeLog(SHOW_DEBUG_LOG, msg, null, tag);
-    }
-
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void ii(final Object msg, final String... tag) {
-        writeLog(SHOW_INFO_LOG, msg, null, tag);
-    }
-
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void ww(final Object msg, final String... tag) {
-        writeLog(SHOW_WARN_LOG, msg, null, tag);
-    }
-
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void ee(final Object msg, final String... tag) {
-        writeLog(SHOW_ERROR_LOG, msg, null, tag);
-    }
-
-    /**
-     * @param msg
-     * @param tag
-     */
-    public static void fjson(final String msg, final String... tag) {
-        writeLog(SHOW_JSON_LOG, msg, null, tag);
-    }
-
-    //3.控制台 + 文件Log
-
-    /**
-     * 3.控制台 + 文件Log
-     *
-     * @param msg
-     * @param tag
-     */
-    public static void vvv(final Object msg, final String... tag) {
-        //控制台
-        consoleLog(SHOW_VERBOSE_LOG, msg, tag);
-        //文件Log
-        writeLog(SHOW_VERBOSE_LOG, msg, null, tag);
-    }
-
-    public static void ddd(final Object msg, final String... tag) {
-        consoleLog(SHOW_DEBUG_LOG, msg, tag);
-
-        writeLog(SHOW_DEBUG_LOG, msg, null, tag);
-    }
-
-
-    public static void iii(final Object msg, final String... tag) {
-        consoleLog(SHOW_INFO_LOG, msg, tag);
-
-        writeLog(SHOW_INFO_LOG, msg, null, tag);
-    }
-
-
-    public static void www(final Object msg, final String... tag) {
-        consoleLog(SHOW_WARN_LOG, msg, tag);
-
-        writeLog(SHOW_WARN_LOG, msg, null, tag);
-    }
-
-
-    public static void eee(final Object msg, final String... tag) {
-        consoleLog(SHOW_ERROR_LOG, msg, tag);
-        writeLog(SHOW_ERROR_LOG, msg, null, tag);
-    }
-
-    /**
-     * 3.控制台 + 文件Log
-     *
-     * @param msg
-     * @param tag
-     */
-    public static void cfjson(final Object msg, final String... tag) {
-        //控制台log
-        consoleLog(SHOW_JSON_LOG, msg, tag);
-        //文件Log
-        writeLog(SHOW_JSON_LOG, msg, null, tag);
-    }
-
-
-    //4.指定Log文件名,输出Log 到文件
-
-    /**
-     * 4.指定Log文件名,仅输出Log 到文件
-     *
-     * @param msg
-     * @param logFileName
-     * @param tag
-     */
-    public static void fv(final Object msg, @Nullable final String logFileName, final String... tag) {
-        writeLog(SHOW_VERBOSE_LOG, msg, logFileName, tag);
-    }
-
-    public static void fd(final Object msg, @Nullable final String logFileName, final String... tag) {
-        writeLog(SHOW_DEBUG_LOG, msg, logFileName, tag);
-    }
-
-
-    public static void fi(final Object msg, @Nullable final String logFileName, final String... tag) {
-        writeLog(SHOW_INFO_LOG, msg, logFileName, tag);
-    }
-
-
-    public static void fw(final Object msg, @Nullable final String logFileName, final String... tag) {
-        writeLog(SHOW_WARN_LOG, msg, logFileName, tag);
-    }
-
-
-    public static void fe(final Object msg, @Nullable final String logFileName, final String... tag) {
-        writeLog(SHOW_ERROR_LOG, msg, logFileName, tag);
-    }
-
-    /**
-     * 4.指定Log文件名,仅输出Log 到文件
-     *
-     * @param msg
-     * @param logFileName 日志文件名
-     * @param tag
-     */
-    public static void ffjson(final String msg, @Nullable final String logFileName, final String... tag) {
-        writeLog(SHOW_JSON_LOG, msg, logFileName, tag);
-    }
-
-    //4.控制台 + 指定Log文件名,且输出Log 到文件
-
-    /**
-     * 4.控制台 + 指定Log文件名,且输出Log 到文件
-     *
-     * @param msg
-     * @param logFileName
-     * @param tag
-     */
-    public static void fvv(final Object msg, @Nullable final String logFileName, final String... tag) {
-        consoleLog(SHOW_VERBOSE_LOG, msg, tag);
-
-        writeLog(SHOW_VERBOSE_LOG, msg, logFileName, tag);
-    }
-
-    public static void fdd(final Object msg, @Nullable final String logFileName, final String... tag) {
-        consoleLog(SHOW_DEBUG_LOG, msg, tag);
-
-        writeLog(SHOW_DEBUG_LOG, msg, logFileName, tag);
-    }
-
-
-    public static void fii(final Object msg, @Nullable final String logFileName, final String... tag) {
-        consoleLog(SHOW_INFO_LOG, msg, tag);
-
-        writeLog(SHOW_INFO_LOG, msg, logFileName, tag);
-    }
-
-
-    public static void fww(final Object msg, @Nullable final String logFileName, final String... tag) {
-        consoleLog(SHOW_WARN_LOG, msg, tag);
-
-        writeLog(SHOW_WARN_LOG, msg, logFileName, tag);
-    }
-
-
-    public static void fee(final Object msg, @Nullable final String logFileName, final String... tag) {
-        consoleLog(SHOW_ERROR_LOG, msg, tag);
-
-        writeLog(SHOW_ERROR_LOG, msg, logFileName, tag);
-
-    }
-
-    /**
-     * 4.控制台 + 指定Log文件名,且输出Log 到文件
-     *
-     * @param msg
-     * @param logFileName
-     * @param tag
-     */
-    public static void fcfjson(final String msg, @Nullable final String logFileName, final String... tag) {
-        consoleLog(SHOW_JSON_LOG, msg, tag);
-
-        writeLog(SHOW_JSON_LOG, msg, logFileName, tag);
-    }
-
-
-    /**
-     * 将msg 写入日志文件
-     *
-     * @param msg
-     */
-    private static void saveLog2File(String msg) {
-        // 得到当前日期时间的指定格式字符串
-        String strDateTimeFileName = fileSimpleDateFormat.format(new Date());
-        saveLog2File(msg, strDateTimeFileName + LOGFILE_SUFFIX);
-    }
-
-    /**
-     * 将msg 写入日志文件
-     *
-     * @param msg
-     * @param logFileName log 文件名
-     */
-    private static void saveLog2File(String msg, String logFileName) {
-        FileWriter objFilerWriter = null;
-        BufferedWriter objBufferedWriter = null;
-
-        do { // 非循环，只是为了减少分支缩进深度
-            String state = Environment.getExternalStorageState();
-            // 未安装 SD 卡
-            if (!Environment.MEDIA_MOUNTED.equals(state)) {
-                Log.d(TAG, "Not mount SD card!");
-                break;
-            }
-
-            // SD 卡不可写
-            if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-                Log.d(TAG, "Not allow write SD card!");
-                break;
-            }
-
-            File rootPath = new File(sLogFolderPath);
-            if (rootPath.exists()) {
-
-
-                File fileLogFilePath = new File(sLogFolderPath, logFileName);
-                // 如果日志文件不存在，则创建它
-                if (true != fileLogFilePath.exists()) {
-                    try {
-                        fileLogFilePath.createNewFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        break;
-                    }
-                }
-
-                // 如果执行到这步日志文件还不存在，就不写日志到文件了
-                if (true != fileLogFilePath.exists()) {
-                    Log.d(TAG, "Create log file failed!");
-                    break;
-                }
-
-                try {
-                    objFilerWriter = new FileWriter(fileLogFilePath, //
-                            true);          // 续写不覆盖
-                } catch (IOException e1) {
-                    Log.d(TAG, "New FileWriter Instance failed");
-                    e1.printStackTrace();
-                    break;
-                }
-
-                objBufferedWriter = new BufferedWriter(objFilerWriter);
-
-                try {
-                    objBufferedWriter.write(msg);
-                    objBufferedWriter.flush();
-                } catch (IOException e) {
-                    Log.d(TAG, "objBufferedWriter.write or objBufferedWriter.flush failed");
-                    e.printStackTrace();
-                }
-            } else {
-                Log.d(TAG, "LogTransaction savePaht invalid!");
-            }
-
-
-        } while (false);
-
-        if (null != objBufferedWriter) {
-            try {
-                objBufferedWriter.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (null != objFilerWriter) {
-            try {
-                objFilerWriter.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    static void consoleLog(@LockLevel final int logLevel, Object msg, String... tag) {
+        if (NOT_SHOW_LOG != (logLevel & mCLogCatShowLogType)) {
+            printLog(getStackTraceElement(INDEX), logLevel, msg, tag);
         }
     }
 
-
-    /**
-     * @param type
-     * @param objectMsg
-     * @param tagArgs
-     */
-    private static void printLog(int type, Object objectMsg, @Nullable String... tagArgs) {
-        //当前线程的堆栈情况
-        int index = 4;
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        final StackTraceElement stackTraceElement = stackTrace[index];
-        printLog(stackTraceElement, type, objectMsg, tagArgs);
-    }
-
-    /**
-     * @param stackTraceElement
-     * @param type
-     * @param objectMsg
-     * @param tagArgs
-     */
     private static void printLog(final StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String... tagArgs) {
         String msg;
-        if (m_cLogCatShowLogType == OPERATION_BIT) {
+        if (mCLogCatShowLogType == NOT_SHOW_LOG) {
             return;
         }
 
@@ -654,71 +356,84 @@ public final class Logcat {
             stringBuilder.append(msg);
         }
 
+        String tag = tagBuilder.toString();
         String logStr = stringBuilder.toString();
+        if (type == SHOW_JSON_LOG) {
+            if (TextUtils.isEmpty(msg)) {
+                Log.d(tag, "Empty or Null json content");
+                return;
+            }
 
+            String message = null;
+
+            try {
+                if (msg.startsWith("{")) {
+                    JSONObject jsonObject = new JSONObject(msg);
+                    message = jsonObject.toString(JSON_INDENT);
+                } else if (msg.startsWith("[")) {
+                    JSONArray jsonArray = new JSONArray(msg);
+                    message = jsonArray.toString(JSON_INDENT);
+                }
+            } catch (JSONException e) {
+                e("JSONException/" + tag, e.getCause().getMessage() + LINE_SEPARATOR + msg);
+                return;
+            }
+
+            printLine(JSON + tag, true);
+            message = logStr + LINE_SEPARATOR + message;
+            String[] lines = message.split(LINE_SEPARATOR);
+            StringBuilder jsonContent = new StringBuilder();
+            for (String line : lines) {
+                jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
+            }
+            Log.d(JSON + tag, jsonContent.toString());
+            printLine(JSON + tag, false);
+        } else {
+            int index = 0;
+            int length = logStr.length();
+            int countOfSub = length / MAX_LENGTH;
+
+            if (countOfSub > 0) {
+                for (int i = 0; i < countOfSub; i++) {
+                    String sub = logStr.substring(index, index + MAX_LENGTH);
+                    printLog(type, tag, sub);
+                    index += MAX_LENGTH;
+                }
+                printLog(type, tag, logStr.substring(index, length));
+                return;
+            }
+            printLog(type, tag, logStr);
+        }
+    }
+
+    private static void printLog(int type, String tag, String logStr) {
         switch (type) {
             case SHOW_VERBOSE_LOG:
-                Log.v(tagBuilder.toString(), logStr);
+                Log.v(tag, logStr);
                 break;
             case SHOW_DEBUG_LOG:
-                Log.d(tagBuilder.toString(), logStr);
+                Log.d(tag, logStr);
                 break;
             case SHOW_INFO_LOG:
-                Log.i(tagBuilder.toString(), logStr);
+                Log.i(tag, logStr);
                 break;
             case SHOW_WARN_LOG:
-                Log.w(tagBuilder.toString(), logStr);
+                Log.w(tag, logStr);
                 break;
             case SHOW_ERROR_LOG:
-                Log.e(tagBuilder.toString(), logStr);
+                Log.e(tag, logStr);
                 break;
-            case SHOW_JSON_LOG: {
-                if (TextUtils.isEmpty(msg)) {
-                    Log.d(tagBuilder.toString(), "Empty or Null json content");
-                    return;
-                }
-
-                String message = null;
-
-                try {
-                    if (msg.startsWith("{")) {
-                        JSONObject jsonObject = new JSONObject(msg);
-                        message = jsonObject.toString(JSON_INDENT);
-                    } else if (msg.startsWith("[")) {
-                        JSONArray jsonArray = new JSONArray(msg);
-                        message = jsonArray.toString(JSON_INDENT);
-                    }
-                } catch (JSONException e) {
-                    e("JSONException/" + tagBuilder.toString(), e.getCause().getMessage() + LINE_SEPARATOR + msg);
-                    return;
-                }
-
-                printLine(JSON + tagBuilder.toString(), true);
-                message = logStr + LINE_SEPARATOR + message;
-                String[] lines = message.split(LINE_SEPARATOR);
-                StringBuilder jsonContent = new StringBuilder();
-                for (String line : lines) {
-                    jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
-                }
-                Log.d(JSON + tagBuilder.toString(), jsonContent.toString());
-                printLine(JSON + tagBuilder.toString(), false);
-            }
-            break;
+            default:
+                break;
         }
-
     }
 
     /**
      * 写Log 到文件
-     *
-     * @param logLevel
-     * @param msg
-     * @param logFileName
-     * @param tag
      */
-    private static void writeLog(@LockLevel final int logLevel, final Object msg, @Nullable final String logFileName, final String... tag) {
-        if (OPERATION_BIT != (logLevel &
-                m_cFileSaveLogType)) {
+    static void writeLog(@LockLevel final int logLevel, final Object msg, @Nullable final String logFileName, final String... tag) {
+        if (NOT_SHOW_LOG != (logLevel &
+                mCFileSaveLogType)) {
             //当前主线程的堆栈情况
             final StackTraceElement stackTraceElement = getStackTraceElement(INDEX);
             mSingleExecutors.execute(new Runnable() {
@@ -731,78 +446,9 @@ public final class Logcat {
         }
     }
 
-    public static void writeLog(@LockLevel final int logLevel, int INDEX, final Object msg, @Nullable final String logFileName, final String... tag) {
-        if (OPERATION_BIT != (logLevel &
-                m_cFileSaveLogType)) {
-            //当前主线程的堆栈情况
-            final StackTraceElement stackTraceElement = getStackTraceElement(INDEX);
-            mSingleExecutors.execute(new Runnable() {
-                @Override
-                public void run() {
-                    Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-                    fileLog(stackTraceElement, logLevel, msg, logFileName, tag);
-                }
-            });
-        }
-    }
-
-    /**
-     * 输出控制台日志
-     *
-     * @param logLevel
-     * @param msg
-     * @param tag
-     */
-    private static void consoleLog(@LockLevel final int logLevel, Object msg, String... tag) {
-        //当前线程的堆栈情况
-        consoleLog(logLevel, getStackTraceElement(INDEX), msg, tag);
-    }
-
-    public static void consoleLog(@LockLevel final int logLevel, int INDEX, Object msg, String[] tag) {
-        //当前线程的堆栈情况
-        consoleLog(logLevel, getStackTraceElement(INDEX), msg, tag);
-    }
-
-    /**
-     * 输出控制台日志
-     *
-     * @param logLevel
-     * @param msg
-     * @param tag
-     */
-    private static void consoleLog(@LockLevel final int logLevel, final StackTraceElement stackTraceElement, Object msg, String[] tag) {
-        if (OPERATION_BIT != (logLevel &
-                m_cLogCatShowLogType)) {
-            printLog(stackTraceElement, logLevel, msg, tag);
-        }
-    }
-
-    /**
-     * @param stackTraceElement
-     * @param type
-     * @param objectMsg
-     * @param tagArgs
-     */
-    private static void fileLog(StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String... tagArgs) {
-        fileLog(stackTraceElement, type, objectMsg, null, tagArgs);
-    }
-
-    private static StackTraceElement getStackTraceElement(int index) {
-        //当前线程的堆栈情况
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        return stackTrace[index];
-    }
-
-    /**
-     * @param stackTraceElement
-     * @param type
-     * @param objectMsg
-     * @param logFileName
-     * @param tagArgs
-     */
     private static void fileLog(StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String logFileName, @Nullable String... tagArgs) {
         String msg;
-        if (m_cFileSaveLogType == OPERATION_BIT) {
+        if (mCFileSaveLogType == NOT_SHOW_LOG) {
             return;
         }
 
@@ -865,41 +511,19 @@ public final class Logcat {
 
         switch (type) {
             case SHOW_VERBOSE_LOG:
-                if (TextUtils.isEmpty(logFileName)) {
-                    saveLog2File(V + stringBuilder.toString());
-                } else {
-                    saveLog2File(V + stringBuilder.toString(), logFileName);
-                }
-
+                saveLogToFile(V + stringBuilder.toString(), logFileName);
                 break;
             case SHOW_DEBUG_LOG:
-                if (TextUtils.isEmpty(logFileName)) {
-                    saveLog2File(D + stringBuilder.toString());
-                } else {
-                    saveLog2File(D + stringBuilder.toString(), logFileName);
-                }
+                saveLogToFile(D + stringBuilder.toString(), logFileName);
                 break;
             case SHOW_INFO_LOG:
-                if (TextUtils.isEmpty(logFileName)) {
-                    saveLog2File(I + stringBuilder.toString());
-                } else {
-                    saveLog2File(I + stringBuilder.toString(), logFileName);
-                }
-
+                saveLogToFile(I + stringBuilder.toString(), logFileName);
                 break;
             case SHOW_WARN_LOG:
-                if (TextUtils.isEmpty(logFileName)) {
-                    saveLog2File(W + stringBuilder.toString());
-                } else {
-                    saveLog2File(W + stringBuilder.toString(), logFileName);
-                }
+                saveLogToFile(W + stringBuilder.toString(), logFileName);
                 break;
             case SHOW_ERROR_LOG:
-                if (TextUtils.isEmpty(logFileName)) {
-                    saveLog2File(E + stringBuilder.toString());
-                } else {
-                    saveLog2File(E + stringBuilder.toString(), logFileName);
-                }
+                saveLogToFile(E + stringBuilder.toString(), logFileName);
                 break;
             case SHOW_JSON_LOG: {
                 if (TextUtils.isEmpty(msg)) {
@@ -932,24 +556,119 @@ public final class Logcat {
                     jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
                 }
                 jsonContent.append("╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
-                if (TextUtils.isEmpty(logFileName)) {
-                    saveLog2File(jsonContent.toString());
-                } else {
-                    saveLog2File(stringBuilder.toString(), logFileName);
-                }
+                saveLogToFile(stringBuilder.toString(), logFileName);
 
             }
             break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * 将msg 写入日志文件
+     *
+     * @param msg         msg
+     * @param logFileName log 文件名
+     */
+    private static void saveLogToFile(String msg, @Nullable String logFileName) {
+        if (TextUtils.isEmpty(logFileName)) {
+            // 得到当前日期时间的指定格式字符串
+            String strDateTimeFileName = fileSimpleDateFormat.format(new Date());
+            logFileName = strDateTimeFileName + LOGFILE_SUFFIX;
+        }
+        FileWriter objFilerWriter = null;
+        BufferedWriter objBufferedWriter = null;
+
+        do { // 非循环，只是为了减少分支缩进深度
+            String state = Environment.getExternalStorageState();
+            // 未安装 SD 卡
+            if (!Environment.MEDIA_MOUNTED.equals(state)) {
+                Log.d(TAG, "Not mount SD card!");
+                break;
+            }
+
+            // SD 卡不可写
+            if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+                Log.d(TAG, "Not allow write SD card!");
+                break;
+            }
+
+            File rootPath = new File(sLogFolderPath);
+            if (rootPath.exists()) {
+                File fileLogFilePath = new File(sLogFolderPath, logFileName);
+                // 如果日志文件不存在，则创建它
+                if (!fileLogFilePath.exists()) {
+                    try {
+                        fileLogFilePath.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        break;
+                    }
+                }
+
+                // 如果执行到这步日志文件还不存在，就不写日志到文件了
+                if (!fileLogFilePath.exists()) {
+                    Log.d(TAG, "Create log file failed!");
+                    break;
+                }
+
+                try {
+                    // 续写不覆盖
+                    objFilerWriter = new FileWriter(fileLogFilePath, true);
+                } catch (IOException e1) {
+                    Log.d(TAG, "New FileWriter Instance failed");
+                    e1.printStackTrace();
+                    break;
+                }
+
+                objBufferedWriter = new BufferedWriter(objFilerWriter);
+
+                try {
+                    objBufferedWriter.write(msg);
+                    objBufferedWriter.flush();
+                } catch (IOException e) {
+                    Log.d(TAG, "objBufferedWriter.write or objBufferedWriter.flush failed");
+                    e.printStackTrace();
+                }
+            } else {
+                Log.d(TAG, "LogTransaction savePaht invalid!");
+            }
+
+
+        } while (false);
+
+        if (null != objBufferedWriter) {
+            try {
+                objBufferedWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
+        if (null != objFilerWriter) {
+            try {
+                objFilerWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static void printLine(String tag, boolean isTop) {
         if (isTop) {
-            Log.d(tag, "╔═══════════════════════════════════════════════════════════════════════════════════════");
+            Log.d(tag, "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
         } else {
-            Log.d(tag, "╚═══════════════════════════════════════════════════════════════════════════════════════");
+            Log.d(tag, "╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
         }
+    }
+
+    /**
+     * 当前线程的堆栈情况
+     */
+    private static StackTraceElement getStackTraceElement(int index) {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        return stackTrace[index];
     }
 
 

@@ -5,6 +5,15 @@
 这是一个Android 上 效率极高的 Log 工具，主要功能为控制不同级别的Log输出,Log信息保存到文件、打印行号、函数调用、Json解析、点击跳转、多标签Tag 支持无限长字符串打印，无Logcat4000字符限制等功能
 
  打印行号、函数调用、Json解析、点击跳转 参照[KLog](https://github.com/ZhaoKaiQiang/KLog) of [ZhaoKaiQiang](https://github.com/ZhaoKaiQiang).
+ 
+ ---
+## Gradle
+
+```
+dependencies {
+    compile 'com.lazy.logging:library:1.3.0'
+}
+```
 
 ### 1.开始使用 Logcat
 
@@ -70,16 +79,11 @@ lineNumber:78
 output file msg result =  4 
 ```
 ### 5.Sample Usage
-![](https://github.com/iflove/Logcat/master/ScreenShot-2017-12-05.png)
 
+![][ScreenShot-2017-12-05.png]
 
-## JCenter
+[ScreenShot-2017-12-05.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/ScreenShot-2017-12-05.png
 
-```
-dependencies {
-    compile 'com.lazy.logging:library:1.3.0'
-}
-```
 
 Thanks [KLog](https://github.com/ZhaoKaiQiang/KLog)
 

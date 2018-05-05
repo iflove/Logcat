@@ -6,6 +6,7 @@ import java.io.File;
 
 public class Builder {
     public String logSavePath = "";
+    public String topLevelTag = "";
     public Character logCatLogLevel;
     public Character fileLogLevel;
 
@@ -41,6 +42,11 @@ public class Builder {
 
     public Builder fileLogLevel(int fileLogLevel) {
         this.fileLogLevel = (char) fileLogLevel;
+        return this;
+    }
+
+    public Builder topLevelTag(@NonNull String tag) {
+        this.topLevelTag = tag;
         return this;
     }
 }

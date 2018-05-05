@@ -35,9 +35,8 @@ public class MyAppication extends Application {
         Logcat.initialize(this);
 
         /*推荐配置*/
-/*
         //初始化Logcat 配置更多信息
-        Builder builder = Logcat.newBuilder();
+        /*Builder builder = Logcat.newBuilder();
         //设置Log 保存的文件夹
         builder.logSavePath(StorageUtils.getDiskCacheDir(this, "log"));
         //设置输出日志等级
@@ -46,8 +45,10 @@ public class MyAppication extends Application {
         } else {
             builder.logCatLogLevel(Logcat.SHOW_INFO_LOG | Logcat.SHOW_WARN_LOG | Logcat.SHOW_ERROR_LOG);
         }
+        builder.topLevelTag("Root");
         //设置输出文件日志等级
         builder.fileLogLevel(Logcat.NOT_SHOW_LOG);
+
         Logcat.initialize(this, builder.build());*/
 
         mActivityLifecycle = new MyActivityLifecycle();

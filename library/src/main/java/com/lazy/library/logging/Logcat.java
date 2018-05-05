@@ -24,7 +24,8 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
+/*
+ *
  * Copyright  2016
  * <p/>
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,9 +53,14 @@ import java.util.concurrent.Executors;
  */
 public final class Logcat {
     /**
-     * 1 级 Tag
+     * 默认 top-level Tag
      */
     private static final String TAG = "Logcat";
+
+    /**
+     * Custom top-level tag
+     */
+    private static String topLevelTag;
 
     /**
      * 日志类型标识符(优先级：由低到高排列，取值越小优先级越高)
@@ -170,6 +176,9 @@ public final class Logcat {
             if (mCFileSaveLogType == NOT_SHOW_LOG) {
                 mSingleExecutors = null;
             }
+        }
+        if (config.topLevelTag != null && !"".equals(config.topLevelTag.trim())) {
+            topLevelTag = config.topLevelTag;
         }
     }
 
@@ -328,7 +337,7 @@ public final class Logcat {
         int lineNumber = stackTraceElement.getLineNumber();
 
         StringBuilder tagBuilder = new StringBuilder();
-        tagBuilder.append(TAG);
+        tagBuilder.append(topLevelTag == null ? TAG : topLevelTag);
         if (tagArgs == null) {
             tagBuilder.append(TAG_SEPARATOR);
             tagBuilder.append(fileName);
@@ -455,7 +464,7 @@ public final class Logcat {
         int lineNumber = stackTraceElement.getLineNumber();
 
         StringBuilder tagBuilder = new StringBuilder();
-        tagBuilder.append(TAG);
+        tagBuilder.append(topLevelTag == null ? TAG : topLevelTag);
         if (tagArgs == null) {
             tagBuilder.append(TAG_SEPARATOR);
             tagBuilder.append(className);

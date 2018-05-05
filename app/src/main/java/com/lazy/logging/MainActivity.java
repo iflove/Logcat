@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 //初始化Logcat 配置更多信息
                 final Builder builder = Logcat.newBuilder();
+                builder.topLevelTag("root");
                 //设置Log 保存的文件夹
                 builder.logSavePath(StorageUtils.getDiskCacheDir(MainActivity.this, "log"));
 

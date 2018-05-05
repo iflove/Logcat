@@ -5,11 +5,8 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
 
-import com.lazy.library.logging.Builder;
 import com.lazy.library.logging.Logcat;
-import com.lazy.logging.BuildConfig;
 import com.lazy.logging.MyActivityLifecycle;
-import com.lazy.logging.util.StorageUtils;
 
 /**
  * @author lazy
@@ -35,11 +32,11 @@ public class MyAppication extends Application {
         mContext = this.getApplicationContext();
         mResources = this.getResources();
         //初始化Logcat
-//        Logcat.initialize(this);
+        Logcat.initialize(this);
 
         /*推荐配置*/
         //初始化Logcat 配置更多信息
-        Builder builder = Logcat.newBuilder();
+        /*Builder builder = Logcat.newBuilder();
         //设置Log 保存的文件夹
         builder.logSavePath(StorageUtils.getDiskCacheDir(this, "log"));
         //设置输出日志等级
@@ -52,7 +49,7 @@ public class MyAppication extends Application {
         //设置输出文件日志等级
         builder.fileLogLevel(Logcat.NOT_SHOW_LOG);
 
-        Logcat.initialize(this, builder.build());
+        Logcat.initialize(this, builder.build());*/
 
         mActivityLifecycle = new MyActivityLifecycle();
         this.registerActivityLifecycleCallbacks(mActivityLifecycle);

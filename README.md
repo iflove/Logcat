@@ -10,7 +10,7 @@
 
 ```
 dependencies {
-    compile 'com.lazy.logging:library:1.3.1'
+    implementation 'com.lazy.logging:library:1.3.1'
 }
 ```
 

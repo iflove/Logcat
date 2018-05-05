@@ -5,11 +5,13 @@ class Config {
     public String logSavePath = "";
     public Character logCatLogLevel;
     public Character fileLogLevel;
+    public String topLevelTag;
 
     public Config(Builder builder) {
         this.logSavePath = builder.logSavePath;
         this.logCatLogLevel = builder.logCatLogLevel;
         this.fileLogLevel = builder.fileLogLevel;
+        this.topLevelTag = builder.topLevelTag;
     }
 
 

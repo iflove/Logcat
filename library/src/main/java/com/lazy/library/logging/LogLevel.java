@@ -7,6 +7,7 @@ public enum LogLevel {
     Info(Logcat.SHOW_INFO_LOG),
     Warn(Logcat.SHOW_WARN_LOG),
     Error(Logcat.SHOW_ERROR_LOG),
+    @Deprecated
     Json(Logcat.SHOW_JSON_LOG),;
 
     LogLevel(int value) {

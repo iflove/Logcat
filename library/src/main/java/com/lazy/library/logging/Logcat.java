@@ -56,6 +56,7 @@ public final class Logcat {
      * 默认 top-level Tag
      */
     private static final String TAG = "Logcat";
+    private static final String BLANK_STR = " ";
 
     /**
      * Custom top-level tag
@@ -73,6 +74,7 @@ public final class Logcat {
     /**
      * 增加json 数据格式化输出处理
      */
+    @Deprecated
     public static final char SHOW_JSON_LOG = 0x01 << 5;
     /**
      * 不显示Log
@@ -85,6 +87,7 @@ public final class Logcat {
     private static final String I = "I/";
     private static final String W = "W/";
     private static final String E = "E/";
+    @Deprecated
     private static final String JSON = "JSON/";
 
     //Tag 分割符号
@@ -102,21 +105,22 @@ public final class Logcat {
     /**
      * 默认为五种日志类型均在 LogCat 中输出显示
      */
-    private static char mCLogCatShowLogType = SHOW_ALL_LOG;
+    private static char logCatShowLogType = SHOW_ALL_LOG;
 
     /**
      * 默认为五种日志类型均在 日志文件 中输出保存
      */
-    private static char mCFileSaveLogType = SHOW_ALL_LOG;
+    private static char fileSaveLogType = SHOW_ALL_LOG;
 
     /**
      * 存放日志文件的目录全路径
      */
-    private static String sLogFolderPath = "";
+    private static String logFolderPath = "";
     /**
      * Application Context 防止内存泄露
      */
-    private static Context mContext;
+    private static Context context;
+    private static String pkgName;
 
     /**
      * 换行符
@@ -129,7 +133,7 @@ public final class Logcat {
     /**
      * File日志打印日期
      */
-    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
     /**
      * 默认文件Log 文件名
      */
@@ -137,7 +141,7 @@ public final class Logcat {
     /**
      * 单线程 用写文件 防止 anr
      */
-    private static ExecutorService mSingleExecutors = Executors.newSingleThreadExecutor();
+    private static ExecutorService singleExecutors = Executors.newSingleThreadExecutor();
 
     private static final int INDEX = 5;
     private static final int MAX_LENGTH = 4000;
@@ -153,7 +157,8 @@ public final class Logcat {
     }
 
     public static void initialize(@NonNull Context context) {
-        mContext = context.getApplicationContext();
+        Logcat.context = context.getApplicationContext();
+        pkgName = Logcat.context.getPackageName();
         initialize(context, defaultConfig());
     }
 
@@ -162,19 +167,20 @@ public final class Logcat {
      * @param config  Config
      */
     public static void initialize(@NonNull Context context, @NonNull Config config) {
-        mContext = context.getApplicationContext();
+        Logcat.context = context.getApplicationContext();
+        pkgName = Logcat.context.getPackageName();
         if (config.logSavePath == null || "".equals(config.logSavePath.trim())) {
             defaultConfig();
         } else {
             checkSaveLogPath(config.logSavePath);
         }
         if (config.logCatLogLevel != null) {
-            mCLogCatShowLogType = config.logCatLogLevel;
+            logCatShowLogType = config.logCatLogLevel;
         }
         if (config.fileLogLevel != null) {
-            mCFileSaveLogType = config.fileLogLevel;
-            if (mCFileSaveLogType == NOT_SHOW_LOG) {
-                mSingleExecutors = null;
+            fileSaveLogType = config.fileLogLevel;
+            if (fileSaveLogType == NOT_SHOW_LOG) {
+                singleExecutors = null;
             }
         }
         if (config.topLevelTag != null && !"".equals(config.topLevelTag.trim())) {
@@ -188,19 +194,19 @@ public final class Logcat {
         // 非循环，只是为了减少分支缩进深度
         do {
             String state = Environment.getExternalStorageState();
-            // 未安装 SD 卡
-            if (!Environment.MEDIA_MOUNTED.equals(state)) {
-                Log.w(TAG, "Not mount SD card!");
-                break;
-            }
-
             // SD 卡不可写
             if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
                 Log.w(TAG, "Not allow write SD card!");
                 break;
             }
 
-            File externalCacheDir = mContext.getExternalCacheDir();
+            // 未安装 SD 卡
+            if (!Environment.MEDIA_MOUNTED.equals(state)) {
+                Log.w(TAG, "Not mount SD card!");
+                break;
+            }
+
+            File externalCacheDir = context.getExternalCacheDir();
             // context.getExternalCacheDir() maybe null
             if (externalCacheDir != null) {
                 builder.logSavePath = externalCacheDir.getAbsolutePath() + File.separator + DEFAULT_LOG_DIR;
@@ -221,7 +227,7 @@ public final class Logcat {
     }
 
     private static void checkSaveLogPath(@NonNull String strSaveLogPath) {
-        if ("".equals(sLogFolderPath.trim())) {
+        if ("".equals(logFolderPath.trim())) {
             File fileSaveLogFolderPath = new File(strSaveLogPath);
             // 保存日志文件的路径不存在的话，就创建它
             if (!fileSaveLogFolderPath.exists()) {
@@ -234,7 +240,7 @@ public final class Logcat {
             }
 
             // 指定日志文件保存的路径，文件名由内部按日期时间形式
-            sLogFolderPath = strSaveLogPath;
+            logFolderPath = strSaveLogPath;
         }
     }
 
@@ -288,6 +294,7 @@ public final class Logcat {
         consoleLog(SHOW_ERROR_LOG, msg);
     }
 
+    @Deprecated
     public static void json(String msg) {
         consoleLog(SHOW_JSON_LOG, msg);
     }
@@ -312,6 +319,7 @@ public final class Logcat {
         consoleLog(SHOW_ERROR_LOG, msg, tag);
     }
 
+    @Deprecated
     public static void json(String tag, String msg) {
         consoleLog(SHOW_JSON_LOG, msg, tag);
     }
@@ -321,14 +329,14 @@ public final class Logcat {
      * 输出控制台日志
      */
     static void consoleLog(@LockLevel final int logLevel, Object msg, String... tag) {
-        if (NOT_SHOW_LOG != (logLevel & mCLogCatShowLogType)) {
+        if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
             printLog(getStackTraceElement(INDEX), logLevel, msg, tag);
         }
     }
 
     private static void printLog(final StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String... tagArgs) {
         String msg;
-        if (mCLogCatShowLogType == NOT_SHOW_LOG) {
+        if (logCatShowLogType == NOT_SHOW_LOG) {
             return;
         }
 
@@ -439,22 +447,23 @@ public final class Logcat {
      */
     static void writeLog(@LockLevel final int logLevel, final Object msg, @Nullable final String logFileName, final String... tag) {
         if (NOT_SHOW_LOG != (logLevel &
-                mCFileSaveLogType)) {
+                fileSaveLogType)) {
             //当前主线程的堆栈情况
             final StackTraceElement stackTraceElement = getStackTraceElement(INDEX);
-            mSingleExecutors.execute(new Runnable() {
+            final long threadId = Thread.currentThread().getId();
+            singleExecutors.execute(new Runnable() {
                 @Override
                 public void run() {
                     Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-                    fileLog(stackTraceElement, logLevel, msg, logFileName, tag);
+                    fileLog(stackTraceElement, logLevel, msg, logFileName, threadId, tag);
                 }
             });
         }
     }
 
-    private static void fileLog(StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String logFileName, @Nullable String... tagArgs) {
+    private static void fileLog(StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String logFileName, long threadId, @Nullable String... tagArgs) {
         String msg;
-        if (mCFileSaveLogType == NOT_SHOW_LOG) {
+        if (fileSaveLogType == NOT_SHOW_LOG) {
             return;
         }
 
@@ -483,25 +492,35 @@ public final class Logcat {
         // 得到当前日期时间的指定格式字符串
 
         String strDateTimeLogHead = simpleDateFormat.format(new Date());
-
+        int pid = android.os.Process.myPid();
         // 将标签、日期时间头、日志信息体结合起来
         stringBuilder
-                .append(tagBuilder.toString())
-                .append(" ")
                 .append(strDateTimeLogHead)
-                .append(LINE_SEPARATOR)
-                .append("fileName:")
-                .append(fileName)
-                .append(LINE_SEPARATOR)
-                .append("className:")
-                .append(className)
-                .append(LINE_SEPARATOR)
-                .append("methodName:")
-                .append(methodName)
-                .append(LINE_SEPARATOR)
-                .append("lineNumber:")
-                .append(lineNumber)
-                .append(LINE_SEPARATOR);
+                .append(BLANK_STR)
+                .append(String.format("%s-%s/%s", pid, threadId, pkgName))
+                .append(BLANK_STR);
+
+        switch (type) {
+            case SHOW_VERBOSE_LOG:
+                stringBuilder.append(V);
+                break;
+            case SHOW_DEBUG_LOG:
+                stringBuilder.append(D);
+                break;
+            case SHOW_INFO_LOG:
+                stringBuilder.append(I);
+                break;
+            case SHOW_WARN_LOG:
+                stringBuilder.append(W);
+                break;
+            case SHOW_ERROR_LOG:
+                stringBuilder.append(E);
+                break;
+            default:
+                break;
+        }
+        stringBuilder.append(tagBuilder.toString())
+                .append("[ (").append(fileName).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
 
 
         if (objectMsg == null) {
@@ -509,63 +528,27 @@ public final class Logcat {
         } else {
             msg = objectMsg.toString();
         }
-        if (msg != null && type != SHOW_JSON_LOG) {
+        if (msg != null) {
             stringBuilder.append(msg);
         }
-        stringBuilder.append(LINE_SEPARATOR + LINE_SEPARATOR);
-
+        stringBuilder.append(LINE_SEPARATOR);
 
         switch (type) {
             case SHOW_VERBOSE_LOG:
-                saveLogToFile(V + stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName);
                 break;
             case SHOW_DEBUG_LOG:
-                saveLogToFile(D + stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName);
                 break;
             case SHOW_INFO_LOG:
-                saveLogToFile(I + stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName);
                 break;
             case SHOW_WARN_LOG:
-                saveLogToFile(W + stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName);
                 break;
             case SHOW_ERROR_LOG:
-                saveLogToFile(E + stringBuilder.toString(), logFileName);
-                break;
-            case SHOW_JSON_LOG: {
-                if (TextUtils.isEmpty(msg)) {
-                    Log.d(tagBuilder.toString(), "Empty or Null json content");
-                    return;
-                }
-
-                String message = null;
-
-                try {
-                    if (msg.startsWith("{")) {
-                        JSONObject jsonObject = new JSONObject(msg);
-                        message = jsonObject.toString(JSON_INDENT);
-                    } else if (msg.startsWith("[")) {
-                        JSONArray jsonArray = new JSONArray(msg);
-                        message = jsonArray.toString(JSON_INDENT);
-                    }
-                } catch (JSONException e) {
-                    e("JSONException/" + tagBuilder.toString(), e.getCause().getMessage() + LINE_SEPARATOR + msg);
-                    return;
-                }
-
-                stringBuilder.append(JSON);
-                stringBuilder.append(LINE_SEPARATOR);
-                stringBuilder.append("╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
-                message = stringBuilder.toString() + LINE_SEPARATOR + message;
-                String[] lines = message.split(LINE_SEPARATOR);
-                StringBuilder jsonContent = new StringBuilder();
-                for (String line : lines) {
-                    jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
-                }
-                jsonContent.append("╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
                 saveLogToFile(stringBuilder.toString(), logFileName);
-
-            }
-            break;
+                break;
             default:
                 break;
         }
@@ -600,9 +583,9 @@ public final class Logcat {
                 break;
             }
 
-            File rootPath = new File(sLogFolderPath);
+            File rootPath = new File(logFolderPath);
             if (rootPath.exists()) {
-                File fileLogFilePath = new File(sLogFolderPath, logFileName);
+                File fileLogFilePath = new File(logFolderPath, logFileName);
                 // 如果日志文件不存在，则创建它
                 if (!fileLogFilePath.exists()) {
                     try {
@@ -661,6 +644,7 @@ public final class Logcat {
         }
     }
 
+    @Deprecated
     private static void printLine(String tag, boolean isTop) {
         if (isTop) {
             Log.i(tag, "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");

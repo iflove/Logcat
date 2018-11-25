@@ -73,7 +73,7 @@ final class LogStackRecord extends LogTransaction {
 
     @Override
     public LogTransaction format(@NonNull String format, Object... args) {
-        doOp(OP_FORMAT, new Pair<String, List<Object>>(format, Arrays.asList(args)));
+        doOp(OP_FORMAT, new Pair<>(format, Arrays.asList(args)));
         return this;
     }
 
@@ -102,7 +102,7 @@ final class LogStackRecord extends LogTransaction {
                     filesName = ((String) mHead.obj);
                     break;
                 case OP_LN:
-                    msgsList.add((String) mHead.obj);
+                    msgsList.add(mHead.obj);
                     break;
                 case OP_FORMAT:
                     Pair<String, List<String>> pair = (Pair<String, List<String>>) mHead.obj;
@@ -125,14 +125,14 @@ final class LogStackRecord extends LogTransaction {
         boolean hasTag = !tagsList.isEmpty();
         boolean hasFile = filesName != null;
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         for (Object o : msgsList) {
-            buffer.append(o.toString());
-            buffer.append(" ");
+            builder.append(o.toString());
+            builder.append(" ");
         }
         String[] tags = new String[tagsList.size()];
         tagsList.toArray(tags);
-        String msg = buffer.toString();
+        String msg = builder.toString();
 
 
         if (hasFile) {

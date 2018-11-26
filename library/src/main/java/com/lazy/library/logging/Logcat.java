@@ -9,9 +9,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.lazy.library.logging.extend.JLog;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -71,11 +69,7 @@ public final class Logcat {
     public static final char SHOW_INFO_LOG = 0x01 << 2;
     public static final char SHOW_WARN_LOG = 0x01 << 3;
     public static final char SHOW_ERROR_LOG = 0x01 << 4;
-    /**
-     * 增加json 数据格式化输出处理
-     */
-    @Deprecated
-    public static final char SHOW_JSON_LOG = 0x01 << 5;
+
     /**
      * 不显示Log
      */
@@ -87,8 +81,6 @@ public final class Logcat {
     private static final String I = "I/";
     private static final String W = "W/";
     private static final String E = "E/";
-    @Deprecated
-    private static final String JSON = "JSON/";
 
     //Tag 分割符号
     private static final String TAG_SEPARATOR = "->";
@@ -99,8 +91,7 @@ public final class Logcat {
                     SHOW_DEBUG_LOG |
                     SHOW_INFO_LOG |
                     SHOW_WARN_LOG |
-                    SHOW_ERROR_LOG |
-                    SHOW_JSON_LOG;
+                    SHOW_ERROR_LOG;
 
     /**
      * 默认为五种日志类型均在 LogCat 中输出显示
@@ -145,9 +136,10 @@ public final class Logcat {
 
     private static final int INDEX = 5;
     private static final int MAX_LENGTH = 4000;
+    private static JLog jLog;
 
     @IntDef({SHOW_VERBOSE_LOG, SHOW_DEBUG_LOG, SHOW_INFO_LOG,
-            SHOW_WARN_LOG, SHOW_ERROR_LOG, SHOW_JSON_LOG, NOT_SHOW_LOG})
+            SHOW_WARN_LOG, SHOW_ERROR_LOG, NOT_SHOW_LOG})
     @Retention(RetentionPolicy.SOURCE)
     private @interface LockLevel {
     }
@@ -185,6 +177,12 @@ public final class Logcat {
         }
         if (config.topLevelTag != null && !"".equals(config.topLevelTag.trim())) {
             topLevelTag = config.topLevelTag;
+        }
+        if (jLog != null) {
+            jLog.release();
+        }
+        if (config.jLog != null) {
+            jLog = config.jLog;
         }
     }
 
@@ -270,10 +268,6 @@ public final class Logcat {
         return new LogStackRecord(LogLevel.Error);
     }
 
-    public static LogTransaction json() {
-        return new LogStackRecord(LogLevel.Json);
-    }
-
     public static void v(Object msg) {
         consoleLog(SHOW_VERBOSE_LOG, msg);
     }
@@ -292,11 +286,6 @@ public final class Logcat {
 
     public static void e(Object msg) {
         consoleLog(SHOW_ERROR_LOG, msg);
-    }
-
-    @Deprecated
-    public static void json(String msg) {
-        consoleLog(SHOW_JSON_LOG, msg);
     }
 
     public static void v(String tag, Object msg) {
@@ -318,12 +307,6 @@ public final class Logcat {
     public static void e(String tag, Object msg) {
         consoleLog(SHOW_ERROR_LOG, msg, tag);
     }
-
-    @Deprecated
-    public static void json(String tag, String msg) {
-        consoleLog(SHOW_JSON_LOG, msg, tag);
-    }
-
 
     /**
      * 输出控制台日志
@@ -366,57 +349,63 @@ public final class Logcat {
         } else {
             msg = objectMsg.toString();
         }
-        if (msg != null && type != SHOW_JSON_LOG) {
+        if (msg != null) {
             stringBuilder.append(msg);
         }
 
         String tag = tagBuilder.toString();
         String logStr = stringBuilder.toString();
-        if (type == SHOW_JSON_LOG) {
-            if (TextUtils.isEmpty(msg)) {
-                Log.e(tag, "Empty or Null json content");
-                return;
-            }
+        printJLog(tag, logStr, type);
+        int index = 0;
+        int length = logStr.length();
+        int countOfSub = length / MAX_LENGTH;
 
-            String message = null;
-
-            try {
-                if (msg.startsWith("{")) {
-                    JSONObject jsonObject = new JSONObject(msg);
-                    message = jsonObject.toString(JSON_INDENT);
-                } else if (msg.startsWith("[")) {
-                    JSONArray jsonArray = new JSONArray(msg);
-                    message = jsonArray.toString(JSON_INDENT);
-                }
-            } catch (JSONException e) {
-                e("JSONException/" + tag, e.getCause().getMessage() + LINE_SEPARATOR + msg);
-                return;
+        if (countOfSub > 0) {
+            for (int i = 0; i < countOfSub; i++) {
+                String sub = logStr.substring(index, index + MAX_LENGTH);
+                printLog(type, tag, sub);
+                index += MAX_LENGTH;
             }
+            printLog(type, tag, logStr.substring(index, length));
+            return;
+        }
+        printLog(type, tag, logStr);
 
-            printLine(JSON + tag, true);
-            message = logStr + LINE_SEPARATOR + message;
-            String[] lines = message.split(LINE_SEPARATOR);
-            StringBuilder jsonContent = new StringBuilder();
-            for (String line : lines) {
-                jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
-            }
-            Log.i(JSON + tag, jsonContent.toString());
-            printLine(JSON + tag, false);
-        } else {
-            int index = 0;
-            int length = logStr.length();
-            int countOfSub = length / MAX_LENGTH;
+    }
 
-            if (countOfSub > 0) {
-                for (int i = 0; i < countOfSub; i++) {
-                    String sub = logStr.substring(index, index + MAX_LENGTH);
-                    printLog(type, tag, sub);
-                    index += MAX_LENGTH;
-                }
-                printLog(type, tag, logStr.substring(index, length));
-                return;
+    private static void printJLog(String tag, String logStr, int type) {
+        if (jLog != null) {
+            // 得到当前日期时间的指定格式字符串
+
+            String strDateTimeLogHead = simpleDateFormat.format(new Date());
+            int pid = android.os.Process.myPid();
+            // 将标签、日期时间头、日志信息体结合起来
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(strDateTimeLogHead)
+                    .append(BLANK_STR)
+                    .append(String.format("%s-%s/%s", pid, Thread.currentThread().getId(), pkgName))
+                    .append(BLANK_STR);
+
+            switch (type) {
+                case SHOW_VERBOSE_LOG:
+                    stringBuilder.append(V);
+                    break;
+                case SHOW_DEBUG_LOG:
+                    stringBuilder.append(D);
+                    break;
+                case SHOW_INFO_LOG:
+                    stringBuilder.append(I);
+                    break;
+                case SHOW_WARN_LOG:
+                    stringBuilder.append(W);
+                    break;
+                case SHOW_ERROR_LOG:
+                    stringBuilder.append(E);
+                    break;
+                default:
+                    break;
             }
-            printLog(type, tag, logStr);
+            jLog.println(stringBuilder.append(tag).append(logStr).toString());
         }
     }
 

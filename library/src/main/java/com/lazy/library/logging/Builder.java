@@ -2,6 +2,8 @@ package com.lazy.library.logging;
 
 import android.support.annotation.NonNull;
 
+import com.lazy.library.logging.extend.JLog;
+
 import java.io.File;
 
 public class Builder {
@@ -9,7 +11,7 @@ public class Builder {
     public String topLevelTag = "";
     public Character logCatLogLevel;
     public Character fileLogLevel;
-
+    public JLog jLog;
 
     public Config build() {
         return new Config(this);
@@ -47,6 +49,11 @@ public class Builder {
 
     public Builder topLevelTag(@NonNull String tag) {
         this.topLevelTag = tag;
+        return this;
+    }
+
+    public Builder dispatchLog(@NonNull JLog jLog) {
+        this.jLog = jLog;
         return this;
     }
 }

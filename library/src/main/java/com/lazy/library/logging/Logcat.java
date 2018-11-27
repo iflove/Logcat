@@ -11,6 +11,10 @@ import android.util.Log;
 
 import com.lazy.library.logging.extend.JLog;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -54,7 +58,13 @@ public final class Logcat {
      * 默认 top-level Tag
      */
     private static final String TAG = "Logcat";
-    private static final String BLANK_STR = " ";
+
+    /**
+     * 换行符
+     */
+    static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+    static final String BLANK_STR = " ";
 
     /**
      * Custom top-level tag
@@ -113,12 +123,7 @@ public final class Logcat {
     private static Context context;
     private static String pkgName;
 
-    /**
-     * 换行符
-     */
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
-
-    private static final int JSON_INDENT = 3;
+    private static final int JSON_INDENT = 4;
     private static final String LOGFILE_SUFFIX = ".log";
 
     /**
@@ -311,13 +316,19 @@ public final class Logcat {
     /**
      * 输出控制台日志
      */
-    static void consoleLog(@LockLevel final int logLevel, Object msg, String... tag) {
+    private static void consoleLog(@LockLevel final int logLevel, Object msg, String... tag) {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
-            printLog(getStackTraceElement(INDEX), logLevel, msg, tag);
+            printLog(getStackTraceElement(INDEX), logLevel, msg, null, tag);
         }
     }
 
-    private static void printLog(final StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String... tagArgs) {
+    static void consoleLog(@LockLevel final int logLevel, @Nullable String formatJSON, Object msg, String... tag) {
+        if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
+            printLog(getStackTraceElement(INDEX), logLevel, msg, formatJSON, tag);
+        }
+    }
+
+    private static void printLog(final StackTraceElement stackTraceElement, int type, Object objectMsg, @Nullable String formatJSON, @Nullable String... tagArgs) {
         String msg;
         if (logCatShowLogType == NOT_SHOW_LOG) {
             return;
@@ -355,7 +366,12 @@ public final class Logcat {
 
         String tag = tagBuilder.toString();
         String logStr = stringBuilder.toString();
-        printJLog(tag, logStr, type);
+        printJLog(tag, logStr, type, formatJSON);
+        //Android Log No Format
+        if (!TextUtils.isEmpty(formatJSON)) {
+            logStr = stringBuilder.append(BLANK_STR).append(formatJSON).toString();
+        }
+
         int index = 0;
         int length = logStr.length();
         int countOfSub = length / MAX_LENGTH;
@@ -373,14 +389,14 @@ public final class Logcat {
 
     }
 
-    private static void printJLog(String tag, String logStr, int type) {
+    private static void printJLog(final String tag, final String logStr, final int type, @Nullable final String json) {
         if (jLog != null) {
             // 得到当前日期时间的指定格式字符串
 
             String strDateTimeLogHead = simpleDateFormat.format(new Date());
             int pid = android.os.Process.myPid();
             // 将标签、日期时间头、日志信息体结合起来
-            StringBuilder stringBuilder = new StringBuilder();
+            final StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(strDateTimeLogHead)
                     .append(BLANK_STR)
                     .append(String.format("%s-%s/%s", pid, Thread.currentThread().getId(), pkgName))
@@ -405,7 +421,29 @@ public final class Logcat {
                 default:
                     break;
             }
-            jLog.println(stringBuilder.append(tag).append(logStr).toString());
+            if (TextUtils.isEmpty(json)) {
+                jLog.println(stringBuilder.append(tag).append(logStr).toString());
+            } else {
+                singleExecutors.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        String indentJSON = null;
+                        try {
+                            if (json.startsWith("{")) {
+                                JSONObject jsonObject = new JSONObject(json);
+                                indentJSON = jsonObject.toString(JSON_INDENT);
+                            } else if (json.startsWith("[")) {
+                                JSONArray jsonArray = new JSONArray(json);
+                                indentJSON = jsonArray.toString(JSON_INDENT);
+                            }
+                        } catch (JSONException e) {
+                            e("JSONException/" + tag, e.getCause().getMessage() + LINE_SEPARATOR + json);
+                            return;
+                        }
+                        jLog.println(stringBuilder.append(tag).append(logStr).append(LINE_SEPARATOR).append(indentJSON).append(LINE_SEPARATOR).toString());
+                    }
+                });
+            }
         }
     }
 
@@ -633,15 +671,6 @@ public final class Logcat {
         }
     }
 
-    @Deprecated
-    private static void printLine(String tag, boolean isTop) {
-        if (isTop) {
-            Log.i(tag, "╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
-        } else {
-            Log.i(tag, "╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════");
-        }
-    }
-
     /**
      * 当前线程的堆栈情况
      */
@@ -649,7 +678,6 @@ public final class Logcat {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         return stackTrace[index];
     }
-
 
     @NonNull
     public static Builder newBuilder() {

@@ -24,5 +24,7 @@ public abstract class LogTransaction {
 
     public abstract LogTransaction format(@NonNull final String format, Object... args);
 
+    public abstract LogTransaction fmtJSON(@NonNull final String json);
+
     public abstract LogTransaction out();
 }

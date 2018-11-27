@@ -86,6 +86,9 @@ public final class JLog implements Handler.Callback {
     }
 
     private void output(String msgText) {
+        if (!isConnected()) {
+            contentRemote();
+        }
         if (out != null) {
             try {
                 out.write(msgText.getBytes());
@@ -95,6 +98,10 @@ public final class JLog implements Handler.Callback {
                 e.printStackTrace();
             }
         }
+    }
+
+    private boolean isConnected() {
+        return socket != null && socket.isConnected();
     }
 
     private void contentRemote() {

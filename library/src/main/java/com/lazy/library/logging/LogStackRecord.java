@@ -21,6 +21,7 @@ final class LogStackRecord extends LogTransaction {
     static final int OP_FILE = 5;
     static final int OP_LN = 6;
     static final int OP_FORMAT = 7;
+    static final int OP_JSON_FORMAT = 8;
 
     private final LogLevel logLevel;
 
@@ -67,7 +68,7 @@ final class LogStackRecord extends LogTransaction {
 
     @Override
     public LogTransaction ln() {
-        doOp(OP_LN, "\n");
+        doOp(OP_LN, Logcat.LINE_SEPARATOR);
         return this;
     }
 
@@ -78,10 +79,17 @@ final class LogStackRecord extends LogTransaction {
     }
 
     @Override
+    public LogTransaction fmtJSON(@NonNull String json) {
+        doOp(OP_JSON_FORMAT, json);
+        return this;
+    }
+
+    @Override
     public LogTransaction out() {
         List<Object> msgsList = new ArrayList<>();
         List<String> tagsList = new ArrayList<>();
         String filesName = null;
+        String jsonText = null;
 
         while (mHead != null) {
 
@@ -109,6 +117,9 @@ final class LogStackRecord extends LogTransaction {
                     String format = String.format(pair.first, pair.second.toArray());
                     msgsList.add(format);
                     break;
+                case OP_JSON_FORMAT:
+                    jsonText = ((String) mHead.obj);
+                    break;
                 default:
                     break;
             }
@@ -128,7 +139,7 @@ final class LogStackRecord extends LogTransaction {
         StringBuilder builder = new StringBuilder();
         for (Object o : msgsList) {
             builder.append(o.toString());
-            builder.append(" ");
+            builder.append(Logcat.BLANK_STR);
         }
         String[] tags = new String[tagsList.size()];
         tagsList.toArray(tags);
@@ -138,7 +149,7 @@ final class LogStackRecord extends LogTransaction {
         if (hasFile) {
             Logcat.writeLog(logLevel.value, msg, filesName, tags);
         }
-        Logcat.consoleLog(logLevel.value, msg, tags);
+        Logcat.consoleLog(logLevel.value, jsonText, msg, tags);
 
         return this;
     }

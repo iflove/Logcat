@@ -19,7 +19,8 @@ public class JLogServer {
             while (true) {
                 try {
                     final Socket client = server.accept();
-                    System.out.println(String.format("%s is connected.", client.getInetAddress()));
+                    final InetAddress address = client.getInetAddress();
+                    System.out.println(String.format("%s is connected.", address));
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
@@ -30,6 +31,7 @@ public class JLogServer {
                                     System.out.println(line);
                                 }
                                 client.close();
+                                System.out.println(String.format("%s is disconnected.", address));
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }

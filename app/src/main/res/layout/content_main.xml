@@ -44,9 +44,9 @@
         android:checked="true"
         android:text="Error" />
 
-    <CheckBox
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:checked="true"
-        android:text="Json" />
+    <!--    <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Json" />-->
 </LinearLayout>

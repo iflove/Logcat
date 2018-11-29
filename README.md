@@ -1,5 +1,5 @@
 # Logcat
-[ ![Download](https://api.bintray.com/packages/lazy/maven/library/images/download.svg?version=1.3.1) ](https://bintray.com/lazy/maven/library/1.3.1/link) [![CircleCI](https://img.shields.io/circleci/project/github/RedSparr0w/node-csgo-parser.svg)]() [![MyGet tenant](https://img.shields.io/dotnet.myget/dotnet-coreclr/dt/Microsoft.DotNet.CoreCLR.svg)]()
+[![](https://jitpack.io/v/iflove/Logcat.svg)](https://jitpack.io/#iflove/Logcat) [![CircleCI](https://img.shields.io/circleci/project/github/RedSparr0w/node-csgo-parser.svg)]() [![MyGet tenant](https://img.shields.io/dotnet.myget/dotnet-coreclr/dt/Microsoft.DotNet.CoreCLR.svg)]()
 
 这是一个Android 上 效率极高的 Log 工具，主要功能为控制不同级别的Log输出,Log信息保存到文件、打印行号、函数调用、Json解析、点击跳转、多标签Tag 支持无限长字符串打印，无Logcat4000字符限制等功能
 

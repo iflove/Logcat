@@ -125,7 +125,7 @@ JLogServer.java 是否能作为一个idea intellij plugin ?
 
 ![][20181129-1.png]
 
-[20181129-0.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/20181129-1.png
+[20181129-1.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/20181129-1.png
 
 文件Log输出格式
 

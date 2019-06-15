@@ -65,10 +65,4 @@ public class MyAppication extends Application {
         return mContext;
     }
 
-    @Override
-    @NonNull
-    public Resources getResources() {
-        return mResources;
-    }
-
 }

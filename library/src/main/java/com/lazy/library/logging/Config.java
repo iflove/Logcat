@@ -3,19 +3,35 @@ package com.lazy.library.logging;
 import com.lazy.library.logging.extend.JLog;
 
 class Config {
-    // 存放日志文件的目录全路径
-    public String logSavePath = "";
-    public Character logCatLogLevel;
-    public Character fileLogLevel;
-    public String topLevelTag;
-    public JLog jLog;
 
-    public Config(Builder builder) {
+    /**
+     * 存放日志文件的目录全路径
+     */
+    String logSavePath = "";
+    Character logCatLogLevel;
+    Character fileLogLevel;
+    String topLevelTag;
+    JLog jLog;
+    boolean autoSaveLogToFile;
+    boolean showStackTraceInfo;
+    boolean showFileTimeInfo;
+    boolean showFilePidInfo;
+    boolean showFileLogLevel;
+    boolean showFileLogTag;
+    boolean showFileStackTraceInfo;
+
+    Config(Builder builder) {
         this.logSavePath = builder.logSavePath;
         this.logCatLogLevel = builder.logCatLogLevel;
         this.fileLogLevel = builder.fileLogLevel;
         this.topLevelTag = builder.topLevelTag;
-        this.jLog = builder.jLog;
+        this.autoSaveLogToFile = builder.autoSaveLogToFile;
+        this.showStackTraceInfo = builder.showStackTraceInfo;
+        this.showFileTimeInfo = builder.showFileTimeInfo;
+        this.showFilePidInfo = builder.showFilePidInfo;
+        this.showFileLogLevel = builder.showFileLogLevel;
+        this.showFileLogTag = builder.showFileLogTag;
+        this.showFileStackTraceInfo = builder.showFileStackTraceInfo;
     }
 
 

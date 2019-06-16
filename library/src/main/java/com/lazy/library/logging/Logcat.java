@@ -145,6 +145,13 @@ public final class Logcat {
     private static final int INDEX = 5;
     private static final int MAX_LENGTH = 4000;
     private static JLog jLog;
+    private static boolean autoSaveLogToFile;
+    private static boolean showStackTraceInfo;
+    private static boolean showFileTimeInfo;
+    private static boolean showFilePidInfo;
+    private static boolean showFileLogLevel;
+    private static boolean showFileLogTag;
+    private static boolean showFileStackTraceInfo;
 
     @IntDef({SHOW_VERBOSE_LOG, SHOW_DEBUG_LOG, SHOW_INFO_LOG,
             SHOW_WARN_LOG, SHOW_ERROR_LOG, NOT_SHOW_LOG})
@@ -190,6 +197,13 @@ public final class Logcat {
         if (config.jLog != null) {
             jLog = config.jLog;
         }
+        autoSaveLogToFile = config.autoSaveLogToFile;
+        showStackTraceInfo = config.showStackTraceInfo;
+        showFileTimeInfo = config.showFileTimeInfo;
+        showFilePidInfo = config.showFilePidInfo;
+        showFileLogLevel = config.showFileLogLevel;
+        showFileLogTag = config.showFileLogTag;
+        showFileStackTraceInfo = config.showFileStackTraceInfo;
     }
 
     private synchronized static void initPrintThread() {
@@ -330,11 +344,22 @@ public final class Logcat {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
             printLog(getStackTraceElement(INDEX), logLevel, msg, null, tag);
         }
+        if (autoSaveLogToFile) {
+            writeLog(logLevel, msg, "", tag);
+        }
     }
 
-    static void consoleLog(@LockLevel final int logLevel, @Nullable String formatJSON, Object msg, String... tag) {
+    static void println(@LockLevel final int logLevel, @Nullable String formatJSON, Object msg, final String filesName, String... tags) {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
-            printLog(getStackTraceElement(INDEX), logLevel, msg, formatJSON, tag);
+            printLog(getStackTraceElement(INDEX), logLevel, msg, formatJSON, tags);
+        }
+        if (autoSaveLogToFile) {
+            writeLog(logLevel, msg, "", tags);
+        } else {
+            boolean hasFile = filesName != null;
+            if (hasFile) {
+                Logcat.writeLog(logLevel, msg, filesName, tags);
+            }
         }
     }
 
@@ -380,7 +405,9 @@ public final class Logcat {
                 methodName = methodName.substring(0, 1).toUpperCase() + methodName.substring(1);
 
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("[ (").append(fileName).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
+                if (showStackTraceInfo) {
+                    stringBuilder.append("[ (").append(fileName).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
+                }
 
                 if (objectMsg == null) {
                     msg = "null";
@@ -573,33 +600,47 @@ public final class Logcat {
         String strDateTimeLogHead = simpleDateFormat.format(new Date());
         int pid = android.os.Process.myPid();
         // 将标签、日期时间头、日志信息体结合起来
-        stringBuilder
-                .append(strDateTimeLogHead)
-                .append(BLANK_STR)
-                .append(String.format("%s-%s/%s", pid, threadId, pkgName))
-                .append(BLANK_STR);
-
-        switch (type) {
-            case SHOW_VERBOSE_LOG:
-                stringBuilder.append(V);
-                break;
-            case SHOW_DEBUG_LOG:
-                stringBuilder.append(D);
-                break;
-            case SHOW_INFO_LOG:
-                stringBuilder.append(I);
-                break;
-            case SHOW_WARN_LOG:
-                stringBuilder.append(W);
-                break;
-            case SHOW_ERROR_LOG:
-                stringBuilder.append(E);
-                break;
-            default:
-                break;
+        if (showFileTimeInfo) {
+            stringBuilder
+                    .append(strDateTimeLogHead)
+                    .append(BLANK_STR);
         }
-        stringBuilder.append(tagBuilder.toString())
-                .append("[ (").append(fileName).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
+
+        if (showFilePidInfo) {
+            stringBuilder
+                    .append(String.format("%s-%s/%s", pid, threadId, pkgName))
+                    .append(BLANK_STR);
+        }
+
+        if (showFileLogLevel) {
+            switch (type) {
+                case SHOW_VERBOSE_LOG:
+                    stringBuilder.append(V);
+                    break;
+                case SHOW_DEBUG_LOG:
+                    stringBuilder.append(D);
+                    break;
+                case SHOW_INFO_LOG:
+                    stringBuilder.append(I);
+                    break;
+                case SHOW_WARN_LOG:
+                    stringBuilder.append(W);
+                    break;
+                case SHOW_ERROR_LOG:
+                    stringBuilder.append(E);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (showFileLogTag) {
+            stringBuilder.append(tagBuilder.toString());
+        }
+
+        if (showFileStackTraceInfo) {
+            stringBuilder.append("[ (").append(fileName).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
+        }
 
 
         if (objectMsg == null) {

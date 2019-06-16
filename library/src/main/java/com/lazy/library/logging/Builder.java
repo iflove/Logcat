@@ -7,11 +7,18 @@ import com.lazy.library.logging.extend.JLog;
 import java.io.File;
 
 public class Builder {
-    public String logSavePath = "";
-    public String topLevelTag = "";
-    public Character logCatLogLevel;
-    public Character fileLogLevel;
-    public JLog jLog;
+    String logSavePath = "";
+    String topLevelTag = "";
+    Character logCatLogLevel;
+    Character fileLogLevel;
+    boolean autoSaveLogToFile;
+    boolean showStackTraceInfo = true;
+    boolean showFileTimeInfo = true;
+    boolean showFilePidInfo = true;
+    boolean showFileLogLevel = true;
+    boolean showFileLogTag = true;
+    boolean showFileStackTraceInfo = true;
+    JLog jLog;
 
     public Config build() {
         return new Config(this);
@@ -54,6 +61,41 @@ public class Builder {
 
     public Builder dispatchLog(@NonNull JLog jLog) {
         this.jLog = jLog;
+        return this;
+    }
+
+    public Builder autoSaveLogToFile(boolean save) {
+        this.autoSaveLogToFile = save;
+        return this;
+    }
+
+    public Builder showStackTraceInfo(boolean show) {
+        this.showStackTraceInfo = show;
+        return this;
+    }
+
+    public Builder showFileTimeInfo(boolean show) {
+        this.showFileTimeInfo = show;
+        return this;
+    }
+
+    public Builder showFilePidInfo(boolean show) {
+        this.showFilePidInfo = show;
+        return this;
+    }
+
+    public Builder showFileLogLevel(boolean show) {
+        this.showFileLogLevel = show;
+        return this;
+    }
+
+    public Builder showFileLogTag(boolean show) {
+        this.showFileLogTag = show;
+        return this;
+    }
+
+    public Builder showFileStackTraceInfo(boolean show) {
+        this.showFileStackTraceInfo = show;
         return this;
     }
 }

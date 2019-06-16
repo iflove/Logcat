@@ -134,7 +134,6 @@ final class LogStackRecord extends LogTransaction {
 
         boolean hasMsg = !msgsList.isEmpty();
         boolean hasTag = !tagsList.isEmpty();
-        boolean hasFile = filesName != null;
 
         StringBuilder builder = new StringBuilder();
         for (Object o : msgsList) {
@@ -146,10 +145,7 @@ final class LogStackRecord extends LogTransaction {
         String msg = builder.toString();
 
 
-        if (hasFile) {
-            Logcat.writeLog(logLevel.value, msg, filesName, tags);
-        }
-        Logcat.consoleLog(logLevel.value, jsonText, msg, tags);
+        Logcat.println(logLevel.value, jsonText, msg, filesName, tags);
 
         return this;
     }

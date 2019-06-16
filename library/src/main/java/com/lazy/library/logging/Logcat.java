@@ -1,5 +1,6 @@
 package com.lazy.library.logging;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Environment;
 import android.os.Handler;
@@ -129,11 +130,12 @@ public final class Logcat {
     /**
      * File日志打印日期
      */
-    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MM-dd HH:mm:ss.SSS");
+    private static final String MM_DD_HH_MM_SS_SSS = "MM-dd HH:mm:ss.SSS";
+
     /**
      * 默认文件Log 文件名
      */
-    private static SimpleDateFormat fileSimpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private static final String YYYY_MM_DD = "yyyy-MM-dd";
     /**
      * 单线程 用写文件 防止 anr
      */
@@ -354,14 +356,24 @@ public final class Logcat {
                 int lineNumber = stackTraceElement.getLineNumber();
 
                 StringBuilder tagBuilder = new StringBuilder();
-                tagBuilder.append(topLevelTag == null ? TAG : topLevelTag);
+                boolean hasTop = topLevelTag != null;
+                if (hasTop) {
+                    tagBuilder.append(topLevelTag);
+                }
                 if (tagArgs == null) {
-                    tagBuilder.append(TAG_SEPARATOR);
+                    if (hasTop) {
+                        tagBuilder.append(TAG_SEPARATOR);
+                    }
                     tagBuilder.append(fileName);
                 } else {
-                    for (String tagArg : tagArgs) {
-                        tagBuilder.append(TAG_SEPARATOR);
-                        tagBuilder.append(tagArg);
+                    for (int i = 0; i < tagArgs.length; i++) {
+                        if (i == 0 && hasTop) {
+                            tagBuilder.append(TAG_SEPARATOR);
+                        }
+                        tagBuilder.append(tagArgs[i]);
+                        if (i < tagArgs.length - 1) {
+                            tagBuilder.append(TAG_SEPARATOR);
+                        }
                     }
                 }
 
@@ -423,7 +435,7 @@ public final class Logcat {
     private static void printJLog(long threadId, final String tag, final String logStr, final int type, @Nullable final String json) {
         if (jLog != null) {
             // 得到当前日期时间的指定格式字符串
-
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat(MM_DD_HH_MM_SS_SSS);
             String strDateTimeLogHead = simpleDateFormat.format(new Date());
             int pid = android.os.Process.myPid();
             // 将标签、日期时间头、日志信息体结合起来
@@ -547,7 +559,7 @@ public final class Logcat {
         StringBuilder stringBuilder = new StringBuilder();
 
         // 得到当前日期时间的指定格式字符串
-
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat(MM_DD_HH_MM_SS_SSS);
         String strDateTimeLogHead = simpleDateFormat.format(new Date());
         int pid = android.os.Process.myPid();
         // 将标签、日期时间头、日志信息体结合起来
@@ -620,6 +632,7 @@ public final class Logcat {
     private static void saveLogToFile(String msg, @Nullable String logFileName) {
         if (TextUtils.isEmpty(logFileName)) {
             // 得到当前日期时间的指定格式字符串
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat fileSimpleDateFormat = new SimpleDateFormat(YYYY_MM_DD);
             String strDateTimeFileName = fileSimpleDateFormat.format(new Date());
             logFileName = strDateTimeFileName + LOGFILE_SUFFIX;
         }
@@ -630,13 +643,13 @@ public final class Logcat {
             String state = Environment.getExternalStorageState();
             // 未安装 SD 卡
             if (!Environment.MEDIA_MOUNTED.equals(state)) {
-                Log.d(TAG, "Not mount SD card!");
+                Log.i(TAG, "Not mount SD card!");
                 break;
             }
 
             // SD 卡不可写
             if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-                Log.d(TAG, "Not allow write SD card!");
+                Log.i(TAG, "Not allow write SD card!");
                 break;
             }
 
@@ -655,7 +668,7 @@ public final class Logcat {
 
                 // 如果执行到这步日志文件还不存在，就不写日志到文件了
                 if (!fileLogFilePath.exists()) {
-                    Log.d(TAG, "Create log file failed!");
+                    Log.i(TAG, "Create log file failed!");
                     break;
                 }
 
@@ -663,7 +676,7 @@ public final class Logcat {
                     // 续写不覆盖
                     objFilerWriter = new FileWriter(fileLogFilePath, true);
                 } catch (IOException e1) {
-                    Log.d(TAG, "New FileWriter Instance failed");
+                    Log.i(TAG, "New FileWriter Instance failed");
                     e1.printStackTrace();
                     break;
                 }
@@ -674,11 +687,11 @@ public final class Logcat {
                     objBufferedWriter.write(msg);
                     objBufferedWriter.flush();
                 } catch (IOException e) {
-                    Log.d(TAG, "objBufferedWriter.write or objBufferedWriter.flush failed");
+                    Log.i(TAG, "objBufferedWriter.write or objBufferedWriter.flush failed");
                     e.printStackTrace();
                 }
             } else {
-                Log.d(TAG, "LogTransaction savePaht invalid!");
+                Log.i(TAG, "LogTransaction savePaht invalid!");
             }
 
 

@@ -372,18 +372,23 @@ public final class Logcat {
             logStr = stringBuilder.append(BLANK_STR).append(formatJSON).toString();
         }
 
-        int index = 0;
-        int length = logStr.length();
-        int countOfSub = length / MAX_LENGTH;
-
-        if (countOfSub > 0) {
-            for (int i = 0; i < countOfSub; i++) {
-                String sub = logStr.substring(index, index + MAX_LENGTH);
-                printLog(type, tag, sub);
-                index += MAX_LENGTH;
+        int tagLength = tag.getBytes().length;
+        int totalSize = tagLength + logStr.getBytes().length;
+        if (totalSize > MAX_LENGTH) {
+            int index = 0;
+            int length = logStr.length();
+            //Android log 限制包括 tag 的长度,以及为了截取字符串最高效率打印中文字符限制 note:中文字一般3个字节
+            int max = (MAX_LENGTH - tagLength) / 3;
+            int countOfSub = length / max;
+            if (countOfSub > 0) {
+                for (int i = 0; i < countOfSub; i++) {
+                    String sub = logStr.substring(index, index + max);
+                    printLog(type, tag, sub);
+                    index += max;
+                }
+                printLog(type, tag, logStr.substring(index, length));
+                return;
             }
-            printLog(type, tag, logStr.substring(index, length));
-            return;
         }
         printLog(type, tag, logStr);
 

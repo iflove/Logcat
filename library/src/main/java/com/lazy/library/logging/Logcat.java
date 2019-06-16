@@ -542,14 +542,24 @@ public final class Logcat {
         int lineNumber = stackTraceElement.getLineNumber();
 
         StringBuilder tagBuilder = new StringBuilder();
-        tagBuilder.append(topLevelTag == null ? TAG : topLevelTag);
+        boolean hasTop = topLevelTag != null;
+        if (hasTop) {
+            tagBuilder.append(topLevelTag);
+        }
         if (tagArgs == null) {
-            tagBuilder.append(TAG_SEPARATOR);
-            tagBuilder.append(className);
-        } else {
-            for (String tagArg : tagArgs) {
+            if (hasTop) {
                 tagBuilder.append(TAG_SEPARATOR);
-                tagBuilder.append(tagArg);
+            }
+            tagBuilder.append(fileName);
+        } else {
+            for (int i = 0; i < tagArgs.length; i++) {
+                if (i == 0 && hasTop) {
+                    tagBuilder.append(TAG_SEPARATOR);
+                }
+                tagBuilder.append(tagArgs[i]);
+                if (i < tagArgs.length - 1) {
+                    tagBuilder.append(TAG_SEPARATOR);
+                }
             }
         }
 

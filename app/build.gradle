@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     defaultConfig {
-        applicationId "com.lazy.logging"
+        applicationId "com.lazy.logcat.demo"
         minSdkVersion 15
         targetSdkVersion 27
         versionCode 1
@@ -27,7 +27,6 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     implementation 'com.android.support:appcompat-v7:27.1.1'
     implementation 'com.android.support:design:27.1.1'
-    implementation 'com.umeng.analytics:analytics:latest.integration'
     implementation 'com.jakewharton:butterknife:8.4.0'
     implementation project(':library')
 //    implementation 'com.github.iflove:Logcat:v2.0.0'

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.lazy.logging">
+    package="com.lazy.logcat.demo">
 
     <!-- 访问网络连接，可能产生GPRS流量 -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -16,18 +16,19 @@
         android:smallScreens="true"
         android:xlargeScreens="true" />
     <application
-        android:name=".app.MyAppication"
-        android:allowBackup="true"
+        android:name="com.lazy.logcat.app.LGApp"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="com.lazy.logcat.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

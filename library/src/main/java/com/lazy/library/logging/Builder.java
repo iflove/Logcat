@@ -1,5 +1,6 @@
 package com.lazy.library.logging;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import com.lazy.library.logging.extend.JLog;
@@ -22,6 +23,10 @@ public class Builder {
     boolean showFileStackTraceInfo = true;
     JLog jLog;
     Map<String, Object> fileTags = new ConcurrentHashMap<>();
+    /**
+     * 删除过了几天无用日志条目
+     */
+    int deleteUnusedLogEntriesAfterDays = 7;
 
     public Config build() {
         return new Config(this);
@@ -115,4 +120,13 @@ public class Builder {
         }
         return this;
     }
+
+    /**
+     * 删除过了几天无用日志条目
+     */
+    public Builder deleteUnusedLogEntriesAfterDays(@IntRange(from = 1, to = Integer.MAX_VALUE) int days) {
+        this.deleteUnusedLogEntriesAfterDays = days;
+        return this;
+    }
+
 }

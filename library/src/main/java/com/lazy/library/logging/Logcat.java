@@ -26,8 +26,11 @@ import java.io.IOException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /*
  *
@@ -148,6 +151,8 @@ public final class Logcat {
     private static final int INDEX = 5;
     private static final int MAX_LENGTH = 4000;
     private static JLog jLog;
+    private static int deleteUnusedLogEntriesAfterDays;
+    private static long FILE_SAVE_TIME;
     private static boolean autoSaveLogToFile;
     private static boolean showStackTraceInfo;
     private static boolean showFileTimeInfo;
@@ -204,6 +209,8 @@ public final class Logcat {
         if (config.fileTags != null) {
             fileTags = config.fileTags;
         }
+        deleteUnusedLogEntriesAfterDays = config.deleteUnusedLogEntriesAfterDays;
+        FILE_SAVE_TIME = TimeUnit.DAYS.toMillis(deleteUnusedLogEntriesAfterDays);
         autoSaveLogToFile = config.autoSaveLogToFile;
         showStackTraceInfo = config.showStackTraceInfo;
         showFileTimeInfo = config.showFileTimeInfo;
@@ -721,6 +728,25 @@ public final class Logcat {
 
             File rootPath = new File(logFolderPath);
             if (rootPath.exists()) {
+                File[] listFiles = rootPath.listFiles();
+                Date now = new Date();
+                boolean delete = false;
+                List<String> delPaths = new ArrayList<>();
+                for (File file : listFiles) {
+                    long lastModified = file.lastModified();
+                    String name = file.getName();
+                    if (now.getTime() - lastModified >= FILE_SAVE_TIME) {
+                        delete = file.delete();
+                        if (delete) {
+                            Log.i(TAG, "deleteUnusedLogEntries is " + name);
+                            delPaths.add(file.getAbsolutePath());
+                        }
+                    }
+                }
+                if (delete) {
+                    MediaScannerConnection.scanFile(context, delPaths.toArray(new String[0]), null, null);
+                }
+
                 File fileLogFilePath = new File(logFolderPath, logFileName);
                 // 如果日志文件不存在，则创建它
                 if (!fileLogFilePath.exists()) {

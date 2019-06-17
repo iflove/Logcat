@@ -14,6 +14,7 @@ class Config {
     Character fileLogLevel;
     String topLevelTag;
     JLog jLog;
+    int deleteUnusedLogEntriesAfterDays;
     Map<String, Object> fileTags;
     boolean autoSaveLogToFile;
     boolean showStackTraceInfo;
@@ -36,6 +37,7 @@ class Config {
         this.showFileLogTag = builder.showFileLogTag;
         this.showFileStackTraceInfo = builder.showFileStackTraceInfo;
         this.fileTags = builder.fileTags;
+        this.deleteUnusedLogEntriesAfterDays = builder.deleteUnusedLogEntriesAfterDays;
     }
 
 

@@ -1,24 +1,45 @@
-# Logging
-这是一个Android 上 效率极高的 Log 工具，主要功能为控制不同级别的Log输出,Log信息保存到文件、打印行号、函数调用、Json解析、点击跳转、多标签Tab 等功能
+# Logcat
+[![](https://jitpack.io/v/iflove/Logcat.svg)](https://jitpack.io/#iflove/Logcat) [![CircleCI](https://img.shields.io/circleci/project/github/RedSparr0w/node-csgo-parser.svg)]() [![MyGet tenant](https://img.shields.io/dotnet.myget/dotnet-coreclr/dt/Microsoft.DotNet.CoreCLR.svg)]()
+
+这是一个Android 上 效率极高的 Log 工具，主要功能为控制不同级别的Log输出,Log信息保存到文件、打印行号、函数调用、Json解析、点击跳转、多标签Tag 支持无限长字符串打印，无Logcat4000字符限制等功能
 
  打印行号、函数调用、Json解析、点击跳转 参照[KLog](https://github.com/ZhaoKaiQiang/KLog) of [ZhaoKaiQiang](https://github.com/ZhaoKaiQiang).
 
-###1.开始使用 Logging
+---
+## Gradle
+
+```groovy
+dependencies {
+    implementation 'com.github.iflove:Logcat:latest'
+}
+```
+
+### 1.开始使用 Logcat
+
 你只需要在 Application 里面调用Logcat.initialize一次即可完成初始化
 ```java
 //初始化Logcat
 Logcat.initialize(this);
 ```
+
 配置更多信息
 ```java
 Builder builder = Logcat.newBuilder();
-builder.logSavePath(StorageUtils.getDiskCacheDir(this,"loggg")); //设置Log 保存的文件夹
-builder.logCatLogLevel(Logcat.SHOW_INFO_LOG| Logcat.SHOW_ERROR_LOG);//设置日志等级
-builder.fileLogLevel(Logcat.NOT_SHOW_LOG); //不显示Log
+builder.topLevelTag("Root");
+//设置Log 保存的文件夹
+builder.logSavePath(StorageUtils.getDiskCacheDir(this, "log"));
+//设置输出日志等级
+if (BuildConfig.DEBUG) {
+  builder.logCatLogLevel(Logcat.SHOW_ALL_LOG);
+} else {
+  builder.logCatLogLevel(Logcat.SHOW_INFO_LOG | Logcat.SHOW_WARN_LOG | Logcat.SHOW_ERROR_LOG);
+}
+//设置输出文件日志等级
+builder.fileLogLevel(Logcat.NOT_SHOW_LOG);
 Logcat.initialize(this, builder.build());
 ```
 
-###2.开始使用Logcat
+### 2.示例
 
 ```java
 //控制台
@@ -28,47 +49,11 @@ Logcat.i("The is info log");
 Logcat.w("The is warn log");
 Logcat.e("The is error log");
 
-//写入Log 文件
-Logcat.vv("file: The is verbose log")
-Logcat.dd("file: The is debug log");
-Logcat.ii("file: The is info log");
-Logcat.ww("file: The is warn log");
-Logcat.ee("file: The is error log");
-
-//控制台+写入Log 文件
-Logcat.vvv("All: The is verbose log");
-Logcat.ddd("All: The is debug log");
-Logcat.iii("All: The is info log");
-Logcat.www("All: The is warn log");
-Logcat.eee("All: The is error log");
-
-//写入Log 文件,且指定 Log文件名
-Logcat.fv("Hello World!", "MyLog.txt");
-//控制台+写入Log 文件,且指定 Log文件名
-Logcat.fvv("Hello World!!", "MyLog.txt");
-
-//0.2 版本添加
-Logcat.v().msg("output msg").out();
-Logcat.v().msg("output msg").msg("result = ").msg(2 + 2).out();
-Logcat.v().msgs("output msgs is ", 1, 2, 3).out();
-Logcat.v().tag("newTag").msg("output msg").out();
-Logcat.v().msg("output msg").tag("newTag").msg("result = ").msg(2 + 2).out();
-Logcat.v().msgs("output msgs is ", 1, 2, 3).tag("newTag").out();
-//
-Logcat.v().file().msg("output file msg").out();
-Logcat.v().file().msg("output file msg").msg("result = ").msg(2 + 2).out();
-Logcat.v().file().msgs("output file msgs is ", 1, 2, 3).out();
-Logcat.v().file().tag("newTag").msg("output file msg").out();
-Logcat.v().file().msg("output file msg").tag("newTag").msg("result = ").msg(2 + 2).out();
-Logcat.v().file().msgs("output file msgs is ", 1, 2, 3).tag("newTag").file("newFileName").msg("当然你也可指定文件名 ").out();
-Logcat.e().msg("output error msg").out().ln().msg("Do you see? 。。。。").format("a:%s;b:%s", 2, 3).out();
-//... Test More
-
 ```
 
-###3.LogTransaction 为Logcat 提供灵活的链式调用api
-```java
+### 3.LogTransaction 为Logcat 提供灵活的链式调用api 
 
+```java
 msg(@NonNull final Object msg);// 打印 msg
 msgs(@NonNull final Object... msg);// n ... msg
 tag(@NonNull final String tag);// 打印 tag
@@ -80,30 +65,75 @@ format(@NonNull final String format, Object... args); //格式化
 out(); //输出log
 ```
 
-###4.Logcat log 文件
+### 4.Logcat log 文件
+
 ```java
 --默认log文件夹 sdcard/Android/data/you.pakeage/cache/logs 下
 
 //文件log 格式
-V/Logcat->newTag 2017-04-15_21:10:17
-fileName:MainActivity.java
-className:com.lazy.logging.MainActivity
-methodName:OnCreate
-lineNumber:78
-output file msg result =  4 
+11-29 22:25:32.363 5523-1/com.lazy.logging V/Logcat[ (MainActivity.java:104)#PrintLog ] output file msg 
 ```
 
-##JCenter
+### 5.JLog
+
+安卓开发者都知道，Android系统的单条日志打印长度是有限的, 底层Logger  `Logger.h` 文件中限制了输出日志字符的大小，具体原因就不造了。
+
+`Logger.h`
+
+```c
+#define LOGGER_ENTRY_MAX_LEN        (4*1024)  
+#define LOGGER_ENTRY_MAX_PAYLOAD    \\  
+    (LOGGER_ENTRY_MAX_LEN - sizeof(struct logger_entry))
 
 ```
-dependencies {
-    compile 'com.lazy.logging:library:0.0.3'
-}
+
+开发也没法子通过API来改变这一值。只能采取分段打印的办法输出日志信息。但是我发现了Java 的`System.out.println()` 是没有限制的，但是在安卓平台上这会转变为安卓INFO 级的日志，而且无需你分段打印的输出日志(是不是很😑)。在实际项目中，一般就也只有请求HTTP接口，而接口又是返回一个比较大JSON，超过4000 字符，安卓的Log API 就好截断，就无法看到完整的响应数据了。采取分段输出，虽然能看到完整的响应数据，但是每达4000字符时突然的换行以及不对齐，稍微不慎就会拷错，拷多json 字符串处理用工具解析查看。当然每次调试看请求数据也是可以的不过很是低效的。所以我做了个大胆的尝试（加入JLog），通过 `socket` 把日志传送到Java的控制中打印。
+
+####  JLogServer
+
+Run JLogServer 步骤: 下载JLogServer.java 到你的项目,用as 直接run main(),JLogServer 可以配置相应的端口，也可以用adb 端口映射。
+
+![][20181129-0.png]
+
+[20181129-0.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/20181129-0.png
+
+
+
+#### Logcat dispatchLog
+
+```java
+...
+builder.dispatchLog(new JLog("192.168.3.15", 5036));
 ```
 
-Thanks [KLog](https://github.com/ZhaoKaiQiang/KLog)
 
-##License
+
+#### 6.Future
+
+JLogServer.java 是否能作为一个idea intellij plugin ?
+
+
+
+
+### 7.Sample Usage
+
+![][ScreenShot-2017-12-05.png]
+
+[ScreenShot-2017-12-05.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/ScreenShot-2017-12-05.png
+
+超长的Log完美输出
+
+![][20181129-1.png]
+
+[20181129-1.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/20181129-1.png
+
+文件Log输出格式
+
+![][20181129-3.png]
+
+[20181129-3.png]: https://github.com/iflove/Logcat/blob/master/ScreenShot/20181129-3.png
+
+## License
 
 ```
 Copyright  2016 Lazy

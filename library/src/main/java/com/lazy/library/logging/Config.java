@@ -2,6 +2,8 @@ package com.lazy.library.logging;
 
 import com.lazy.library.logging.extend.JLog;
 
+import java.util.Map;
+
 class Config {
 
     /**
@@ -12,6 +14,7 @@ class Config {
     Character fileLogLevel;
     String topLevelTag;
     JLog jLog;
+    Map<String, Object> fileTags;
     boolean autoSaveLogToFile;
     boolean showStackTraceInfo;
     boolean showFileTimeInfo;
@@ -32,6 +35,7 @@ class Config {
         this.showFileLogLevel = builder.showFileLogLevel;
         this.showFileLogTag = builder.showFileLogTag;
         this.showFileStackTraceInfo = builder.showFileStackTraceInfo;
+        this.fileTags = builder.fileTags;
     }
 
 

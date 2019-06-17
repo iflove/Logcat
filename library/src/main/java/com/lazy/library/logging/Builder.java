@@ -5,6 +5,8 @@ import android.support.annotation.NonNull;
 import com.lazy.library.logging.extend.JLog;
 
 import java.io.File;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Builder {
     String logSavePath = "";
@@ -19,6 +21,7 @@ public class Builder {
     boolean showFileLogTag = true;
     boolean showFileStackTraceInfo = true;
     JLog jLog;
+    Map<String, Object> fileTags = new ConcurrentHashMap<>();
 
     public Config build() {
         return new Config(this);
@@ -96,6 +99,20 @@ public class Builder {
 
     public Builder showFileStackTraceInfo(boolean show) {
         this.showFileStackTraceInfo = show;
+        return this;
+    }
+
+    public Builder addTagToFile(@NonNull String tag) {
+        if (!this.fileTags.containsKey(tag)) {
+            this.fileTags.put(tag, null);
+        }
+        return this;
+    }
+
+    public Builder addTagsToFile(@NonNull String... tags) {
+        for (String tag : tags) {
+            addTagToFile(tag);
+        }
         return this;
     }
 }

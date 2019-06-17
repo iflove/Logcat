@@ -2,6 +2,7 @@ package com.lazy.library.logging;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.media.MediaScannerConnection;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -26,6 +27,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 
 /*
  *
@@ -141,6 +143,7 @@ public final class Logcat {
      */
     private static HandlerThread printHandlerThread;
     private static Handler printHandler;
+    private static Map<String, Object> fileTags;
 
     private static final int INDEX = 5;
     private static final int MAX_LENGTH = 4000;
@@ -196,6 +199,10 @@ public final class Logcat {
         }
         if (config.jLog != null) {
             jLog = config.jLog;
+        }
+
+        if (config.fileTags != null) {
+            fileTags = config.fileTags;
         }
         autoSaveLogToFile = config.autoSaveLogToFile;
         showStackTraceInfo = config.showStackTraceInfo;
@@ -340,12 +347,12 @@ public final class Logcat {
     /**
      * 输出控制台日志
      */
-    private static void consoleLog(@LockLevel final int logLevel, Object msg, String... tag) {
+    private static void consoleLog(@LockLevel final int logLevel, Object msg, String... tags) {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
-            printLog(getStackTraceElement(INDEX), logLevel, msg, null, tag);
+            printLog(getStackTraceElement(INDEX), logLevel, msg, null, tags);
         }
-        if (autoSaveLogToFile) {
-            writeLog(logLevel, msg, "", tag);
+        if (autoSaveLogToFile || canWriteLogToFile(tags)) {
+            writeLog(logLevel, msg, "", tags);
         }
     }
 
@@ -353,7 +360,7 @@ public final class Logcat {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
             printLog(getStackTraceElement(INDEX), logLevel, msg, formatJSON, tags);
         }
-        if (autoSaveLogToFile) {
+        if (autoSaveLogToFile || canWriteLogToFile(tags)) {
             writeLog(logLevel, msg, "", tags);
         } else {
             boolean hasFile = filesName != null;
@@ -361,6 +368,14 @@ public final class Logcat {
                 Logcat.writeLog(logLevel, msg, filesName, tags);
             }
         }
+    }
+
+    private static boolean canWriteLogToFile(String... tags) {
+        if (tags != null && fileTags != null && !fileTags.isEmpty()) {
+            String tagStr = tags[0];
+            return fileTags.containsKey(tagStr);
+        }
+        return false;
     }
 
     private static void printLog(final StackTraceElement stackTraceElement, final int type, final Object objectMsg, final @Nullable String formatJSON, final @Nullable String... tagArgs) {
@@ -710,7 +725,10 @@ public final class Logcat {
                 // 如果日志文件不存在，则创建它
                 if (!fileLogFilePath.exists()) {
                     try {
-                        fileLogFilePath.createNewFile();
+                        boolean createSuccess = fileLogFilePath.createNewFile();
+                        if (createSuccess) {
+                            MediaScannerConnection.scanFile(context, new String[]{fileLogFilePath.getAbsolutePath()}, null, null);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                         break;

@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.lazy.logcat.demo">
 
     <!-- 访问网络连接，可能产生GPRS流量 -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <!-- 获取网络信息状态，如当前的网络连接是否有效 -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-
-    <!-- 指定应用程序所支持的屏幕尺寸，并针对比应用程序所支持的屏幕还要大屏幕，启用屏幕兼容模式。 -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- 获取网络信息状态，如当前的网络连接是否有效 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- 指定应用程序所支持的屏幕尺寸，并针对比应用程序所支持的屏幕还要大屏幕，启用屏幕兼容模式。 -->
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
         android:normalScreens="true"
         android:smallScreens="true"
         android:xlargeScreens="true" />
+
+
     <application
         android:name="com.lazy.logcat.app.LGApp"
         android:allowBackup="false"
@@ -22,6 +22,13 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <service
+            android:name="com.lazy.logcat.PushService"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":push"
+            tools:ignore="ExportedService" />
+
         <activity
             android:name="com.lazy.logcat.MainActivity"
             android:label="@string/app_name"

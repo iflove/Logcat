@@ -109,7 +109,7 @@ public class Builder {
 
     public Builder addTagToFile(@NonNull String tag) {
         if (!this.fileTags.containsKey(tag)) {
-            this.fileTags.put(tag, null);
+            this.fileTags.put(tag, tag);
         }
         return this;
     }

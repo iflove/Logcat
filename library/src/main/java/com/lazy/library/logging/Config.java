@@ -4,7 +4,7 @@ import com.lazy.library.logging.extend.JLog;
 
 import java.util.Map;
 
-public class Config {
+class Config {
 
     /**
      * 存放日志文件的目录全路径

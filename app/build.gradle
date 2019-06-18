@@ -29,6 +29,8 @@ dependencies {
     implementation 'com.android.support:design:27.1.1'
     implementation 'com.jakewharton:butterknife:8.4.0'
     implementation project(':library')
+    implementation group: 'com.squareup.okio', name: 'okio', version: '2.2.2'
+
 //    implementation 'com.github.iflove:Logcat:v2.0.0'
 
 }

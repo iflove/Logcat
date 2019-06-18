@@ -22,6 +22,7 @@ final class LogStackRecord extends LogTransaction {
     static final int OP_LN = 6;
     static final int OP_FORMAT = 7;
     static final int OP_JSON_FORMAT = 8;
+    static final int OP_FILE_APPEND = 9;
 
     private final LogLevel logLevel;
 
@@ -85,11 +86,18 @@ final class LogStackRecord extends LogTransaction {
     }
 
     @Override
+    public LogTransaction append(boolean append) {
+        doOp(OP_FILE_APPEND, append);
+        return this;
+    }
+
+    @Override
     public LogTransaction out() {
         List<Object> msgsList = new ArrayList<>();
         List<String> tagsList = new ArrayList<>();
         String filesName = null;
         String jsonText = null;
+        boolean fileAppend = true;
 
         while (mHead != null) {
 
@@ -120,6 +128,9 @@ final class LogStackRecord extends LogTransaction {
                 case OP_JSON_FORMAT:
                     jsonText = ((String) mHead.obj);
                     break;
+                case OP_FILE_APPEND:
+                    fileAppend = ((boolean) mHead.obj);
+                    break;
                 default:
                     break;
             }
@@ -145,7 +156,7 @@ final class LogStackRecord extends LogTransaction {
         String msg = builder.toString();
 
 
-        Logcat.println(logLevel.value, jsonText, msg, filesName, tags);
+        Logcat.println(logLevel.value, jsonText, msg, filesName, fileAppend, tags);
 
         return this;
     }

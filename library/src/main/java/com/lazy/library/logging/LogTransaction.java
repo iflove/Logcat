@@ -26,5 +26,10 @@ public abstract class LogTransaction {
 
     public abstract LogTransaction fmtJSON(@NonNull final String json);
 
+    /**
+     * 日志文件是否追加
+     */
+    public abstract LogTransaction append(boolean append);
+
     public abstract LogTransaction out();
 }

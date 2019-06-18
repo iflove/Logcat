@@ -359,28 +359,43 @@ public final class Logcat {
             printLog(getStackTraceElement(INDEX), logLevel, msg, null, tags);
         }
         if (autoSaveLogToFile || canWriteLogToFile(tags)) {
-            writeLog(logLevel, msg, "", tags);
+            writeLog(logLevel, msg, "", true, tags);
         }
     }
 
-    static void println(@LockLevel final int logLevel, @Nullable String formatJSON, Object msg, final String filesName, String... tags) {
+    static void println(@LockLevel final int logLevel, @Nullable String formatJSON, Object msg, final String filesName, final boolean append, String... tags) {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
             printLog(getStackTraceElement(INDEX), logLevel, msg, formatJSON, tags);
         }
         if (autoSaveLogToFile || canWriteLogToFile(tags)) {
-            writeLog(logLevel, msg, "", tags);
+            writeLog(logLevel, msg, "", true, tags);
         } else {
             boolean hasFile = filesName != null;
             if (hasFile) {
-                Logcat.writeLog(logLevel, msg, filesName, tags);
+                Logcat.writeLog(logLevel, msg, filesName, append, tags);
             }
         }
     }
 
-    private static boolean canWriteLogToFile(String... tags) {
-        if (tags != null && fileTags != null && !fileTags.isEmpty()) {
-            String tagStr = tags[0];
-            return fileTags.containsKey(tagStr);
+    private static boolean canWriteLogToFile(String... tagArgs) {
+        StringBuilder tagBuilder = new StringBuilder();
+        boolean hasTop = topLevelTag != null;
+        if (hasTop) {
+            tagBuilder.append(topLevelTag);
+        }
+        if (tagArgs != null) {
+            for (int i = 0; i < tagArgs.length; i++) {
+                if (i == 0 && hasTop) {
+                    tagBuilder.append(TAG_SEPARATOR);
+                }
+                tagBuilder.append(tagArgs[i]);
+                if (i < tagArgs.length - 1) {
+                    tagBuilder.append(TAG_SEPARATOR);
+                }
+            }
+        }
+        if (tagBuilder.length() > 0 && fileTags != null && !fileTags.isEmpty()) {
+            return fileTags.containsKey(tagBuilder.toString());
         }
         return false;
     }
@@ -560,7 +575,7 @@ public final class Logcat {
      * 写Log 到文件
      */
     static void writeLog(@LockLevel final int logLevel, final Object msg,
-                         @Nullable final String logFileName, final String... tag) {
+                         @Nullable final String logFileName, final boolean append, final String... tag) {
         if (NOT_SHOW_LOG != (logLevel &
                 fileSaveLogType)) {
             //当前线程的堆栈情况
@@ -572,14 +587,14 @@ public final class Logcat {
             printHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    fileLog(stackTraceElement, logLevel, msg, logFileName, threadId, tag);
+                    fileLog(stackTraceElement, logLevel, msg, logFileName, append, threadId, tag);
                 }
             });
         }
     }
 
     private static void fileLog(StackTraceElement stackTraceElement, int type, Object
-            objectMsg, @Nullable String logFileName, long threadId, @Nullable String... tagArgs) {
+            objectMsg, @Nullable String logFileName, final boolean append, long threadId, @Nullable String... tagArgs) {
         String msg;
         if (fileSaveLogType == NOT_SHOW_LOG) {
             return;
@@ -677,19 +692,19 @@ public final class Logcat {
 
         switch (type) {
             case SHOW_VERBOSE_LOG:
-                saveLogToFile(stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName, append);
                 break;
             case SHOW_DEBUG_LOG:
-                saveLogToFile(stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName, append);
                 break;
             case SHOW_INFO_LOG:
-                saveLogToFile(stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName, append);
                 break;
             case SHOW_WARN_LOG:
-                saveLogToFile(stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName, append);
                 break;
             case SHOW_ERROR_LOG:
-                saveLogToFile(stringBuilder.toString(), logFileName);
+                saveLogToFile(stringBuilder.toString(), logFileName, append);
                 break;
             default:
                 break;
@@ -702,7 +717,7 @@ public final class Logcat {
      * @param msg         msg
      * @param logFileName log 文件名
      */
-    private static void saveLogToFile(String msg, @Nullable String logFileName) {
+    private static void saveLogToFile(String msg, @Nullable String logFileName, final boolean append) {
         if (TextUtils.isEmpty(logFileName)) {
             // 得到当前日期时间的指定格式字符串
             @SuppressLint("SimpleDateFormat") SimpleDateFormat fileSimpleDateFormat = new SimpleDateFormat(YYYY_MM_DD);
@@ -769,7 +784,7 @@ public final class Logcat {
 
                 try {
                     // 续写不覆盖
-                    objFilerWriter = new FileWriter(fileLogFilePath, true);
+                    objFilerWriter = new FileWriter(fileLogFilePath, append);
                 } catch (IOException e1) {
                     Log.i(TAG, "New FileWriter Instance failed");
                     e1.printStackTrace();

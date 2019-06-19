@@ -1,7 +1,8 @@
 package com.lazy.library.logging;
 
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
 
 import com.lazy.library.logging.extend.JLog;
 
@@ -11,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Builder {
     String logSavePath = "";
-    String topLevelTag = "";
+    String topLevelTag;
     Character logCatLogLevel;
     Character fileLogLevel;
     boolean autoSaveLogToFile;
@@ -62,7 +63,7 @@ public class Builder {
         return this;
     }
 
-    public Builder topLevelTag(@NonNull String tag) {
+    public Builder topLevelTag(String tag) {
         this.topLevelTag = tag;
         return this;
     }

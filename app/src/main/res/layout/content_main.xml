@@ -14,63 +14,114 @@
     tools:context="com.lazy.logcat.MainActivity"
     tools:showIn="@layout/activity_main">
 
-  <!--  <TextView
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
-        android:text="&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;打印日志级别控制&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;"
+        android:text="打印日志级别控制"
         android:textColor="@android:color/black"
-        android:textSize="18sp" />-->
+        android:textSize="14sp" />
 
-  <CheckBox
+    <LinearLayout
+        android:id="@+id/level"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:checked="true"
-        android:text="Verbose" />
+        android:orientation="vertical">
+
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Verbose" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Debug" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Info" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Warn" />
+
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Error" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18sp"
+        android:layout_marginBottom="10dp"
+        android:text="打印日志格式控制"
+        android:textColor="@android:color/black"
+        android:textSize="14sp" />
 
     <CheckBox
+        android:id="@+id/top"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
-        android:text="Debug" />
+        android:text="标签Top.1" />
 
     <CheckBox
+        android:id="@+id/autoSaveLogToFile"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
-        android:text="Info" />
+        android:text="autoSaveLogToFile" />
 
     <CheckBox
+        android:id="@+id/showStackTraceInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
-        android:text="Warn" />
+        android:text="showStackTraceInfo" />
 
     <CheckBox
+        android:id="@+id/showFileTimeInfo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:checked="true"
-        android:text="Error" />
+        android:text="showFileTimeInfo" />
 
-  <!-- <TextView
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_marginTop="18sp"
-       android:layout_marginBottom="10dp"
-       android:text="&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;标签控制&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;"
-       android:textColor="@android:color/black"
-       android:textSize="18sp" />
+    <CheckBox
+        android:id="@+id/showFilePidInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="showFilePidInfo" />
 
-   <CheckBox
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:checked="true"
-       android:text="标签Top.1" />
+    <CheckBox
+        android:id="@+id/showFileLogLevel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="showFileLogLevel" />
 
-   <CheckBox
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:checked="true"
-       android:text="autoSaveLogToFile" />-->
+    <CheckBox
+        android:id="@+id/showFileLogTag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="showFileLogTag" />
 
+    <CheckBox
+        android:id="@+id/showFileStackTraceInfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="showFileStackTraceInfo" />
 </LinearLayout>

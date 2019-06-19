@@ -7,11 +7,12 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Process;
-import android.support.annotation.IntDef;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.lazy.library.logging.extend.JLog;
 
@@ -196,9 +197,8 @@ public final class Logcat {
         if (config.fileLogLevel != null) {
             fileSaveLogType = config.fileLogLevel;
         }
-        if (config.topLevelTag != null && !"".equals(config.topLevelTag.trim())) {
-            topLevelTag = config.topLevelTag;
-        }
+        topLevelTag = config.topLevelTag;
+
         if (jLog != null) {
             jLog.release();
         }
@@ -367,12 +367,12 @@ public final class Logcat {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
             printLog(getStackTraceElement(INDEX), logLevel, msg, formatJSON, tags);
         }
-        if (autoSaveLogToFile || canWriteLogToFile(tags)) {
-            writeLog(logLevel, msg, "", true, tags);
+        boolean hasFile = filesName != null;
+        if (hasFile) {
+            writeLog(logLevel, msg, filesName, append, tags);
         } else {
-            boolean hasFile = filesName != null;
-            if (hasFile) {
-                Logcat.writeLog(logLevel, msg, filesName, append, tags);
+            if (autoSaveLogToFile || canWriteLogToFile(tags)) {
+                writeLog(logLevel, msg, "", true, tags);
             }
         }
     }
@@ -574,12 +574,12 @@ public final class Logcat {
     /**
      * 写Log 到文件
      */
-    static void writeLog(@LockLevel final int logLevel, final Object msg,
-                         @Nullable final String logFileName, final boolean append, final String... tag) {
+    private static void writeLog(@LockLevel final int logLevel, final Object msg,
+                                 @Nullable final String logFileName, final boolean append, final String... tag) {
         if (NOT_SHOW_LOG != (logLevel &
                 fileSaveLogType)) {
             //当前线程的堆栈情况
-            final StackTraceElement stackTraceElement = getStackTraceElement(INDEX);
+            final StackTraceElement stackTraceElement = getStackTraceElement(INDEX + 1);
             //linux thread ID
             Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
             final long threadId = Process.myTid();
@@ -669,13 +669,27 @@ public final class Logcat {
                 default:
                     break;
             }
+            if (!showFileLogTag && !showFileStackTraceInfo) {
+                stringBuilder.append(BLANK_STR);
+            }
         }
 
         if (showFileLogTag) {
             stringBuilder.append(tagBuilder.toString());
+            if (!showFileStackTraceInfo) {
+                stringBuilder.append(":");
+                stringBuilder.append(BLANK_STR);
+            }
         }
 
         if (showFileStackTraceInfo) {
+            if (showFileTimeInfo || showFilePidInfo || showFileLogLevel || showFileLogTag) {
+                if (!showFileLogLevel) {
+                    stringBuilder.append(":");
+                }
+                stringBuilder.append(BLANK_STR);
+            }
+
             stringBuilder.append("[ (").append(fileName).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
         }
 
@@ -685,9 +699,7 @@ public final class Logcat {
         } else {
             msg = objectMsg.toString();
         }
-        if (msg != null) {
-            stringBuilder.append(msg);
-        }
+        stringBuilder.append(msg);
         stringBuilder.append(LINE_SEPARATOR);
 
         switch (type) {

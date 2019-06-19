@@ -1,6 +1,7 @@
 package com.lazy.library.logging;
 
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by lazy on 2017/4/12.

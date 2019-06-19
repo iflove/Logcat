@@ -3,14 +3,15 @@ package com.lazy.logcat;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.lazy.library.logging.Logcat;
 import com.lazy.logcat.app.LGApp;
 import com.lazy.logcat.demo.R;
@@ -24,6 +25,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import okio.Okio;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,12 +39,31 @@ public class MainActivity extends AppCompatActivity {
     public static final String TAG_TOP_6 = "标签Top.6";
     public static final String TAG_TOP_7 = "标签Top.7";
     public static final String TAG_TOP_8 = "标签Top.8";
+    public static final String TAG_VIEW_CLICK_EVENT = "View_Click_Event";
+    @BindView(R.id.top)
+    CheckBox top;
+    @BindView(R.id.autoSaveLogToFile)
+    CheckBox autoSaveLogToFile;
+    @BindView(R.id.showStackTraceInfo)
+    CheckBox showStackTraceInfo;
+    @BindView(R.id.showFileTimeInfo)
+    CheckBox showFileTimeInfo;
+    @BindView(R.id.showFilePidInfo)
+    CheckBox showFilePidInfo;
+    @BindView(R.id.showFileLogLevel)
+    CheckBox showFileLogLevel;
+    @BindView(R.id.showFileLogTag)
+    CheckBox showFileLogTag;
+    @BindView(R.id.showFileStackTraceInfo)
+    CheckBox showFileStackTraceInfo;
+
     private String json;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         //启动Push服务进程
@@ -48,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         intent.setPackage(getPackageName());
         startService(intent);
 
-        final ViewGroup contentMain = findViewById(R.id.content_main);
+        final ViewGroup levelViewGroup = findViewById(R.id.level);
         try {
             InputStream is = getAssets().open("cards.json");
             json = Okio.buffer(Okio.source(is)).readUtf8();
@@ -63,35 +86,52 @@ public class MainActivity extends AppCompatActivity {
         Button fab = findViewById(R.id.fab);
 
 
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        fab.setOnClickListener(view -> {
+            Logcat.i(TAG_VIEW_CLICK_EVENT, "view id: fab" + " clicked");
 
-                int logCatLogLevel = Logcat.NOT_SHOW_LOG;
-                final List<Character> logLevelCharacterList = new ArrayList<>();
-                int childCount = contentMain.getChildCount();
-                for (int i = 0; i < childCount; i++) {
-                    CheckBox checkBox = (CheckBox) contentMain.getChildAt(i);
-                    if (checkBox.isChecked()) {
-                        logLevelCharacterList.add(characters.get(i));
-                    }
+            int logCatLogLevel = Logcat.NOT_SHOW_LOG;
+            final List<Character> logLevelCharacterList = new ArrayList<>();
+            int childCount = levelViewGroup.getChildCount();
+            for (int i = 0; i < childCount; i++) {
+                CheckBox checkBox = (CheckBox) levelViewGroup.getChildAt(i);
+                if (checkBox.isChecked()) {
+                    logLevelCharacterList.add(characters.get(i));
                 }
-
-                if (logLevelCharacterList.size() >= 1) {
-                    logCatLogLevel = logLevelCharacterList.get(0);
-                }
-                for (int i = 1; i < logLevelCharacterList.size(); i++) {
-                    logCatLogLevel |= logLevelCharacterList.get(i);
-                }
-                LGApp.logBuilder.logCatLogLevel(logCatLogLevel);
-                LGApp.logBuilder.fileLogLevel(logCatLogLevel);
-
-                Logcat.initialize(MainActivity.this, LGApp.logBuilder.build());
-
-                printLog();
-                Snackbar.make(view, "printLog", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
             }
+
+            if (logLevelCharacterList.size() >= 1) {
+                logCatLogLevel = logLevelCharacterList.get(0);
+            }
+            for (int i = 1; i < logLevelCharacterList.size(); i++) {
+                logCatLogLevel |= logLevelCharacterList.get(i);
+            }
+            LGApp.logBuilder.logCatLogLevel(logCatLogLevel);
+            LGApp.logBuilder.fileLogLevel(logCatLogLevel);
+            if (top.isChecked()) {
+                LGApp.logBuilder.topLevelTag(LGApp.TAG_TOP_1);
+            } else {
+                LGApp.logBuilder.topLevelTag(null);
+            }
+            //是否自动保存日志到文件中
+            LGApp.logBuilder.autoSaveLogToFile(autoSaveLogToFile.isChecked());
+            //是否显示打印日志调用堆栈信息
+            LGApp.logBuilder.showStackTraceInfo(showStackTraceInfo.isChecked());
+            //是否显示文件日志的时间
+            LGApp.logBuilder.showFileTimeInfo(showFileTimeInfo.isChecked());
+            //是否显示文件日志的进程以及Linux线程
+            LGApp.logBuilder.showFilePidInfo(showFilePidInfo.isChecked());
+            //是否显示文件日志级别
+            LGApp.logBuilder.showFileLogLevel(showFileLogLevel.isChecked());
+            //是否显示文件日志标签
+            LGApp.logBuilder.showFileLogTag(showFileLogTag.isChecked());
+            //是否显示文件日志调用堆栈信息
+            LGApp.logBuilder.showFileStackTraceInfo(showFileStackTraceInfo.isChecked());
+
+            Logcat.initialize(MainActivity.this, LGApp.logBuilder.build());
+
+            printLog();
+            Snackbar.make(view, "printLog", Snackbar.LENGTH_LONG)
+                    .setAction("Action", null).show();
         });
         printLog();
     }
@@ -113,13 +153,8 @@ public class MainActivity extends AppCompatActivity {
         Logcat.v().tags(TAG_TOP_3, TAG_TOP_4).msg("标签3和标签4的日志").msg("now: ").msgs(System.nanoTime(), System.currentTimeMillis()).out();
 
 
-        Logcat.v().file().tag(TAG_TOP_5).msg("printf log to file at main thread").out();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Logcat.v().file().tag(TAG_TOP_5).msg("printf log to file not at main thread").out();
-            }
-        }).start();
+        Logcat.v().file().tag(TAG_TOP_5).msg("printf log to file on main thread").out();
+        new Thread(() -> Logcat.v().file().tag(TAG_TOP_5).msg("printf log to file not on main thread").out()).start();
 
         Logcat.v().file().tag(TAG_TOP_6).tag(TAG_TOP_7).msg("标签6和标签7的日志").out();
         Logcat.v().file().tags(TAG_TOP_6, TAG_TOP_7).msg("标签6和标签7的日志").msg("now: ").msgs(System.nanoTime(), System.currentTimeMillis()).out();
@@ -130,5 +165,11 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @OnClick({R.id.top, R.id.autoSaveLogToFile, R.id.showStackTraceInfo, R.id.showFileTimeInfo, R.id.showFilePidInfo, R.id.showFileLogLevel, R.id.showFileLogTag, R.id.showFileStackTraceInfo})
+    public void onViewClicked(View view) {
+        String s = view.toString();
+        String idName = s.substring(s.indexOf("/") + 1, s.length() - 1);
 
+        Logcat.i(TAG_VIEW_CLICK_EVENT, "view id:" + idName + " clicked");
+    }
 }

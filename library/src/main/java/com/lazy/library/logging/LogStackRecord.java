@@ -149,8 +149,11 @@ final class LogStackRecord extends LogTransaction {
 
         StringBuilder builder = new StringBuilder();
         for (Object o : msgsList) {
-            builder.append(o.toString());
-            builder.append(Logcat.BLANK_STR);
+            String str = o.toString();
+            builder.append(str);
+            if (!Logcat.LINE_SEPARATOR.equals(str)) {
+                builder.append(Logcat.BLANK_STR);
+            }
         }
         String[] tags = new String[tagsList.size()];
         tagsList.toArray(tags);

@@ -1,4 +1,4 @@
-package com.lazy.logging.util;
+package com.lazy.logcat.util;
 
 import android.content.Context;
 import android.os.Environment;

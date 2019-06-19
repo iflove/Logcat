@@ -1,7 +1,8 @@
 package com.lazy.library.logging;
 
-import android.support.annotation.NonNull;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ final class LogStackRecord extends LogTransaction {
     static final int OP_LN = 6;
     static final int OP_FORMAT = 7;
     static final int OP_JSON_FORMAT = 8;
+    static final int OP_FILE_APPEND = 9;
 
     private final LogLevel logLevel;
 
@@ -85,11 +87,18 @@ final class LogStackRecord extends LogTransaction {
     }
 
     @Override
+    public LogTransaction append(boolean append) {
+        doOp(OP_FILE_APPEND, append);
+        return this;
+    }
+
+    @Override
     public LogTransaction out() {
         List<Object> msgsList = new ArrayList<>();
         List<String> tagsList = new ArrayList<>();
         String filesName = null;
         String jsonText = null;
+        boolean fileAppend = true;
 
         while (mHead != null) {
 
@@ -120,6 +129,9 @@ final class LogStackRecord extends LogTransaction {
                 case OP_JSON_FORMAT:
                     jsonText = ((String) mHead.obj);
                     break;
+                case OP_FILE_APPEND:
+                    fileAppend = ((boolean) mHead.obj);
+                    break;
                 default:
                     break;
             }
@@ -134,22 +146,21 @@ final class LogStackRecord extends LogTransaction {
 
         boolean hasMsg = !msgsList.isEmpty();
         boolean hasTag = !tagsList.isEmpty();
-        boolean hasFile = filesName != null;
 
         StringBuilder builder = new StringBuilder();
         for (Object o : msgsList) {
-            builder.append(o.toString());
-            builder.append(Logcat.BLANK_STR);
+            String str = o.toString();
+            builder.append(str);
+            if (!Logcat.LINE_SEPARATOR.equals(str)) {
+                builder.append(Logcat.BLANK_STR);
+            }
         }
         String[] tags = new String[tagsList.size()];
         tagsList.toArray(tags);
         String msg = builder.toString();
 
 
-        if (hasFile) {
-            Logcat.writeLog(logLevel.value, msg, filesName, tags);
-        }
-        Logcat.consoleLog(logLevel.value, jsonText, msg, tags);
+        Logcat.println(logLevel.value, jsonText, msg, filesName, fileAppend, tags);
 
         return this;
     }

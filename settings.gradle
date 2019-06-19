@@ -1,1 +1,1 @@
-include ':app', ':library', ':JLog'
+include ':app', ':library', ':JLog', ':simple'

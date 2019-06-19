@@ -1,6 +1,7 @@
 package com.lazy.library.logging;
 
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by lazy on 2017/4/12.
@@ -25,6 +26,11 @@ public abstract class LogTransaction {
     public abstract LogTransaction format(@NonNull final String format, Object... args);
 
     public abstract LogTransaction fmtJSON(@NonNull final String json);
+
+    /**
+     * 日志文件是否追加
+     */
+    public abstract LogTransaction append(boolean append);
 
     public abstract LogTransaction out();
 }

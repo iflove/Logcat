@@ -3,13 +3,13 @@ apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.iflove'
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 27
-        versionCode 5
-        versionName "2.0.0"
+        targetSdkVersion 28
+        versionCode 6
+        versionName "2.1.0"
 
 
     }
@@ -23,5 +23,5 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    compileOnly 'com.android.support:support-annotations:27.1.1'
+    compileOnly 'androidx.annotation:annotation:1.1.0'
 }

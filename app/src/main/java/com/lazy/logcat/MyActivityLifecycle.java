@@ -1,4 +1,4 @@
-package com.lazy.logging;
+package com.lazy.logcat;
 
 import android.app.Activity;
 import android.app.Application;
@@ -10,8 +10,7 @@ import com.lazy.library.logging.Logcat;
  * Created by lazy on 16/9/11.
  */
 public class MyActivityLifecycle implements Application.ActivityLifecycleCallbacks {
-    //
-    private static final String TAG = "MyActivityLifecycle";
+    private static final String TAG = "ActivityLifecycle";
 
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {

@@ -61,7 +61,7 @@ public class LGApp extends Application {
         builder.deleteUnusedLogEntriesAfterDays(7);
         //输出到Java控制台服务端
         if (isMainProcess) {
-            builder.dispatchLog(new JLog("192.168.31.154", 5036));
+            builder.dispatchLog(new JLog("192.168.3.11", 5036));
         }
         //是否自动保存日志到文件中
         builder.autoSaveLogToFile(true);

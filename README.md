@@ -10,7 +10,7 @@
 
 ```groovy
 dependencies {
-    implementation 'com.github.iflove:Logcat:latest'
+    implementation 'com.github.iflove:Logcat:2.1.1'
 }
 ```
 
@@ -25,17 +25,44 @@ Logcat.initialize(this);
 配置更多信息
 ```java
 Builder builder = Logcat.newBuilder();
-builder.topLevelTag("Root");
 //设置Log 保存的文件夹
 builder.logSavePath(StorageUtils.getDiskCacheDir(this, "log"));
 //设置输出日志等级
 if (BuildConfig.DEBUG) {
-  builder.logCatLogLevel(Logcat.SHOW_ALL_LOG);
+    builder.logCatLogLevel(Logcat.SHOW_ALL_LOG);
+    //设置输出文件日志等级
+    builder.fileLogLevel(Logcat.SHOW_ALL_LOG);
 } else {
-  builder.logCatLogLevel(Logcat.SHOW_INFO_LOG | Logcat.SHOW_WARN_LOG | Logcat.SHOW_ERROR_LOG);
+    builder.logCatLogLevel(Logcat.SHOW_INFO_LOG | Logcat.SHOW_WARN_LOG | Logcat.SHOW_ERROR_LOG);
+    //设置输出文件日志等级
+    builder.fileLogLevel(Logcat.SHOW_INFO_LOG | Logcat.SHOW_WARN_LOG | Logcat.SHOW_ERROR_LOG);
 }
-//设置输出文件日志等级
-builder.fileLogLevel(Logcat.NOT_SHOW_LOG);
+//不显示日志
+//builder.fileLogLevel(Logcat.NOT_SHOW_LOG);
+
+builder.topLevelTag(TAG_TOP_1);
+//删除过了几天无用日志条目
+builder.deleteUnusedLogEntriesAfterDays(7);
+//输出到Java控制台服务端
+if (isMainProcess) {
+    builder.dispatchLog(new JLog("192.168.3.11", 5036));
+}
+//是否自动保存日志到文件中
+builder.autoSaveLogToFile(true);
+//是否显示打印日志调用堆栈信息
+builder.showStackTraceInfo(true);
+//是否显示文件日志的时间
+builder.showFileTimeInfo(true);
+//是否显示文件日志的进程以及Linux线程
+builder.showFilePidInfo(true);
+//是否显示文件日志级别
+builder.showFileLogLevel(true);
+//是否显示文件日志标签
+builder.showFileLogTag(true);
+//是否显示文件日志调用堆栈信息
+builder.showFileStackTraceInfo(true);
+//添加该标签,日志将被写入文件
+builder.addTagToFile(TAG_APP_EVENT);
 Logcat.initialize(this, builder.build());
 ```
 
@@ -70,7 +97,7 @@ out(); //输出log
 ```java
 --默认log文件夹 sdcard/Android/data/you.pakeage/cache/logs 下
 
-//文件log 格式
+//默认文件log 格式
 11-29 22:25:32.363 5523-1/com.lazy.logging V/Logcat[ (MainActivity.java:104)#PrintLog ] output file msg 
 ```
 

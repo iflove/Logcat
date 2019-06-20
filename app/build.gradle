@@ -38,6 +38,6 @@ dependencies {
     implementation project(':library')
     implementation group: 'com.squareup.okio', name: 'okio', version: '2.2.2'
 
-//    implementation 'com.github.iflove:Logcat:v2.1.0'
+//    implementation 'com.github.iflove:Logcat:2.1.0'
 
 }

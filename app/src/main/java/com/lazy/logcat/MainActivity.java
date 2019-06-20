@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         //打印超出限制4000字节的日志
         Logcat.i(TAG_TOP_2, json);
         //JLog JSon字符串格式化
-        Logcat.i().tag(TAG_TOP_2).msg("response body:").fmtJSON(json).out();
+//        Logcat.i().tag(TAG_TOP_2).msg("response body:").fmtJSON(json).out();
 
         Logcat.v().tag(TAG_TOP_3).tag(TAG_TOP_4).msg("标签3和标签4的日志").out();
         Logcat.v().tags(TAG_TOP_3, TAG_TOP_4).msg("标签3和标签4的日志").msg("now: ").msgs(System.nanoTime(), System.currentTimeMillis()).out();

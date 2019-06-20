@@ -92,14 +92,18 @@ public final class Logcat {
      */
     public static final char NOT_SHOW_LOG = 0;
 
-    //日志级别
+    /**
+     * 日志级别
+     */
     private static final String V = "V/";
     private static final String D = "D/";
     private static final String I = "I/";
     private static final String W = "W/";
     private static final String E = "E/";
 
-    //Tag 分割符号
+    /**
+     * Tag 分割符号
+     */
     private static final String TAG_SEPARATOR = "->";
     private static final String DEFAULT_LOG_DIR = "logs";
 
@@ -143,10 +147,15 @@ public final class Logcat {
      */
     private static final String YYYY_MM_DD = "yyyy-MM-dd";
     /**
-     * 单线程 用写文件 防止 anr
+     * 单线程打印Log,打印大量log,主线程耗时
      */
     private static HandlerThread printHandlerThread;
     private static Handler printHandler;
+    /**
+     * 单线程 用写文件 防止 anr
+     */
+    private static HandlerThread printFileHandlerThread;
+    private static Handler printFileHandler;
     private static Map<String, Object> fileTags;
 
     private static final int INDEX = 5;
@@ -196,6 +205,14 @@ public final class Logcat {
         }
         if (config.fileLogLevel != null) {
             fileSaveLogType = config.fileLogLevel;
+            if (fileSaveLogType == NOT_SHOW_LOG) {
+                if (printFileHandlerThread != null) {
+                    printFileHandlerThread.quit();
+                    printFileHandler = null;
+                }
+            } else {
+                initPrintFileLogThread();
+            }
         }
         topLevelTag = config.topLevelTag;
 
@@ -226,6 +243,15 @@ public final class Logcat {
             printHandlerThread.start();
             printHandler = new Handler(printHandlerThread.getLooper());
             Log.i(TAG, printHandlerThread.getName() + "#" + printHandlerThread.getThreadId() + " is starting");
+        }
+    }
+
+    private synchronized static void initPrintFileLogThread() {
+        if (printFileHandlerThread == null) {
+            printFileHandlerThread = new HandlerThread("PrintFileLogThread");
+            printFileHandlerThread.start();
+            printFileHandler = new Handler(printFileHandlerThread.getLooper());
+            Log.i(TAG, printFileHandlerThread.getName() + "#" + printFileHandlerThread.getThreadId() + " is starting");
         }
     }
 
@@ -285,12 +311,6 @@ public final class Logcat {
         }
     }
 
-    // 2017/4/15
-
-    public static LogTransaction level(LogLevel logLevel) {
-        return new LogStackRecord(logLevel);
-    }
-
     public static LogTransaction v() {
         return new LogStackRecord(LogLevel.Verbose);
     }
@@ -312,67 +332,70 @@ public final class Logcat {
     }
 
     public static void v(Object msg) {
-        consoleLog(SHOW_VERBOSE_LOG, msg);
+        out(SHOW_VERBOSE_LOG, msg);
     }
 
     public static void d(Object msg) {
-        consoleLog(SHOW_DEBUG_LOG, msg);
+        out(SHOW_DEBUG_LOG, msg);
     }
 
     public static void i(Object msg) {
-        consoleLog(SHOW_INFO_LOG, msg);
+        out(SHOW_INFO_LOG, msg);
     }
 
     public static void w(Object msg) {
-        consoleLog(SHOW_WARN_LOG, msg);
+        out(SHOW_WARN_LOG, msg);
     }
 
     public static void e(Object msg) {
-        consoleLog(SHOW_ERROR_LOG, msg);
+        out(SHOW_ERROR_LOG, msg);
     }
 
     public static void v(String tag, Object msg) {
-        consoleLog(SHOW_VERBOSE_LOG, msg, tag);
+        out(SHOW_VERBOSE_LOG, msg, tag);
     }
 
     public static void d(String tag, Object msg) {
-        consoleLog(SHOW_DEBUG_LOG, msg, tag);
+        out(SHOW_DEBUG_LOG, msg, tag);
     }
 
     public static void i(String tag, Object msg) {
-        consoleLog(SHOW_INFO_LOG, msg, tag);
+        out(SHOW_INFO_LOG, msg, tag);
     }
 
     public static void w(String tag, Object msg) {
-        consoleLog(SHOW_WARN_LOG, msg, tag);
+        out(SHOW_WARN_LOG, msg, tag);
     }
 
     public static void e(String tag, Object msg) {
-        consoleLog(SHOW_ERROR_LOG, msg, tag);
+        out(SHOW_ERROR_LOG, msg, tag);
     }
 
     /**
-     * 输出控制台日志
+     * 输出日志
      */
-    private static void consoleLog(@LockLevel final int logLevel, Object msg, String... tags) {
+    private static void out(@LockLevel final int logLevel, Object msg, String... tags) {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
             printLog(getStackTraceElement(INDEX), logLevel, msg, null, tags);
         }
         if (autoSaveLogToFile || canWriteLogToFile(tags)) {
-            writeLog(logLevel, msg, "", true, tags);
+            writeLog(logLevel, msg, null, "", true, tags);
         }
     }
 
-    static void println(@LockLevel final int logLevel, @Nullable String formatJSON, Object msg, final String filesName, final boolean append, String... tags) {
+    /**
+     * 输出日志
+     */
+    static void out(@LockLevel final int logLevel, @Nullable String jsonText, Object msg, final String filesName, final boolean append, String... tags) {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
-            printLog(getStackTraceElement(INDEX), logLevel, msg, formatJSON, tags);
+            printLog(getStackTraceElement(INDEX), logLevel, msg, jsonText, tags);
         }
         boolean hasFile = filesName != null;
         if (hasFile) {
-            writeLog(logLevel, msg, filesName, append, tags);
+            writeLog(logLevel, msg, jsonText, filesName, append, tags);
         } else {
             if (autoSaveLogToFile || canWriteLogToFile(tags)) {
-                writeLog(logLevel, msg, "", true, tags);
+                writeLog(logLevel, msg, jsonText, "", true, tags);
             }
         }
     }
@@ -400,7 +423,7 @@ public final class Logcat {
         return false;
     }
 
-    private static void printLog(final StackTraceElement stackTraceElement, final int type, final Object objectMsg, final @Nullable String formatJSON, final @Nullable String... tagArgs) {
+    private static void printLog(final StackTraceElement stackTraceElement, final int type, final Object objectMsg, final @Nullable String jsonText, final @Nullable String... tagArgs) {
         checkPrintHandler();
         //linux thread ID
         Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
@@ -422,11 +445,11 @@ public final class Logcat {
                 if (hasTop) {
                     tagBuilder.append(topLevelTag);
                 }
-                if (tagArgs == null) {
-                    if (hasTop) {
-                        tagBuilder.append(TAG_SEPARATOR);
+                if (tagArgs == null || tagArgs.length == 0) {
+                    if (!hasTop) {
+                        tagBuilder.append(TAG);
                     }
-                    tagBuilder.append(fileName);
+
                 } else {
                     for (int i = 0; i < tagArgs.length; i++) {
                         if (i == 0 && hasTop) {
@@ -451,16 +474,14 @@ public final class Logcat {
                 } else {
                     msg = objectMsg.toString();
                 }
-                if (msg != null) {
-                    stringBuilder.append(msg);
-                }
+                stringBuilder.append(msg);
 
                 String tag = tagBuilder.toString();
                 String logStr = stringBuilder.toString();
-                printJLog(threadId, tag, logStr, type, formatJSON);
+                printJLog(threadId, tag, logStr, type, jsonText);
                 //Android Log No Format
-                if (!TextUtils.isEmpty(formatJSON)) {
-                    logStr = stringBuilder.append(BLANK_STR).append(formatJSON).toString();
+                if (!TextUtils.isEmpty(jsonText)) {
+                    logStr = stringBuilder.append(BLANK_STR).append(jsonText).toString();
                 }
 
                 int tagLength = tag.getBytes().length;
@@ -496,7 +517,7 @@ public final class Logcat {
         }
     }
 
-    private static void printJLog(long threadId, final String tag, final String logStr, final int type, @Nullable final String json) {
+    private static void printJLog(long threadId, final String tag, final String logStr, final int type, @Nullable final String jsonText) {
         if (jLog != null) {
             // 得到当前日期时间的指定格式字符串
             @SuppressLint("SimpleDateFormat") SimpleDateFormat simpleDateFormat = new SimpleDateFormat(MM_DD_HH_MM_SS_SSS);
@@ -528,23 +549,25 @@ public final class Logcat {
                 default:
                     break;
             }
-            if (TextUtils.isEmpty(json)) {
-                jLog.println(stringBuilder.append(tag).append(logStr).toString());
+            if (TextUtils.isEmpty(jsonText)) {
+                jLog.println(stringBuilder.append(tag).append(":").append(BLANK_STR).append(logStr).toString());
             } else {
                 String indentJSON = null;
                 try {
-                    if (json.startsWith("{")) {
-                        JSONObject jsonObject = new JSONObject(json);
+                    if (jsonText.startsWith("{")) {
+                        JSONObject jsonObject = new JSONObject(jsonText);
                         indentJSON = jsonObject.toString(JSON_INDENT);
-                    } else if (json.startsWith("[")) {
-                        JSONArray jsonArray = new JSONArray(json);
+                    } else if (jsonText.startsWith("[")) {
+                        JSONArray jsonArray = new JSONArray(jsonText);
                         indentJSON = jsonArray.toString(JSON_INDENT);
                     }
+                    stringBuilder.append(indentJSON);
+                    stringBuilder.append(LINE_SEPARATOR);
                 } catch (JSONException e) {
-                    e("JSONException/" + tag, e.getCause().getMessage() + LINE_SEPARATOR + json);
+                    Log.e("JSONException/", e.getCause().getMessage() + LINE_SEPARATOR + jsonText);
                     return;
                 }
-                jLog.println(stringBuilder.append(tag).append(logStr).append(LINE_SEPARATOR).append(indentJSON).append(LINE_SEPARATOR).toString());
+                jLog.println(stringBuilder.append(tag).append(":").append(BLANK_STR).append(logStr).append(LINE_SEPARATOR).append(indentJSON).append(LINE_SEPARATOR).toString());
             }
         }
     }
@@ -574,7 +597,7 @@ public final class Logcat {
     /**
      * 写Log 到文件
      */
-    private static void writeLog(@LockLevel final int logLevel, final Object msg,
+    private static void writeLog(@LockLevel final int logLevel, final Object msg, @Nullable final String jsonText,
                                  @Nullable final String logFileName, final boolean append, final String... tag) {
         if (NOT_SHOW_LOG != (logLevel &
                 fileSaveLogType)) {
@@ -583,18 +606,19 @@ public final class Logcat {
             //linux thread ID
             Process.setThreadPriority(Process.THREAD_PRIORITY_DEFAULT);
             final long threadId = Process.myTid();
-            checkPrintHandler();
-            printHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    fileLog(stackTraceElement, logLevel, msg, logFileName, append, threadId, tag);
-                }
-            });
+            if (printFileHandler != null) {
+                printFileHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        fileLog(stackTraceElement, logLevel, msg, jsonText, logFileName, append, threadId, tag);
+                    }
+                });
+            }
         }
     }
 
     private static void fileLog(StackTraceElement stackTraceElement, int type, Object
-            objectMsg, @Nullable String logFileName, final boolean append, long threadId, @Nullable String... tagArgs) {
+            objectMsg, @Nullable String jsonText, @Nullable String logFileName, final boolean append, long threadId, @Nullable String... tagArgs) {
         String msg;
         if (fileSaveLogType == NOT_SHOW_LOG) {
             return;
@@ -610,11 +634,11 @@ public final class Logcat {
         if (hasTop) {
             tagBuilder.append(topLevelTag);
         }
-        if (tagArgs == null) {
-            if (hasTop) {
-                tagBuilder.append(TAG_SEPARATOR);
+        if (tagArgs == null || tagArgs.length == 0) {
+            if (!hasTop) {
+                tagBuilder.append(TAG);
             }
-            tagBuilder.append(fileName);
+
         } else {
             for (int i = 0; i < tagArgs.length; i++) {
                 if (i == 0 && hasTop) {
@@ -701,6 +725,23 @@ public final class Logcat {
         }
         stringBuilder.append(msg);
         stringBuilder.append(LINE_SEPARATOR);
+        if (!TextUtils.isEmpty(jsonText)) {
+            String indentJSON = null;
+            try {
+                if (jsonText.startsWith("{")) {
+                    JSONObject jsonObject = new JSONObject(jsonText);
+                    indentJSON = jsonObject.toString(JSON_INDENT);
+                } else if (jsonText.startsWith("[")) {
+                    JSONArray jsonArray = new JSONArray(jsonText);
+                    indentJSON = jsonArray.toString(JSON_INDENT);
+                }
+                stringBuilder.append(indentJSON);
+                stringBuilder.append(LINE_SEPARATOR);
+            } catch (JSONException e) {
+                Log.e("JSONException/", e.getCause().getMessage() + LINE_SEPARATOR + jsonText);
+                return;
+            }
+        }
 
         switch (type) {
             case SHOW_VERBOSE_LOG:
@@ -747,11 +788,6 @@ public final class Logcat {
                 break;
             }
 
-            // SD 卡不可写
-            if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-                Log.i(TAG, "Not allow write SD card!");
-                break;
-            }
 
             File rootPath = new File(logFolderPath);
             if (rootPath.exists()) {

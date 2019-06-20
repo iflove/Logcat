@@ -29,6 +29,7 @@ class Config {
         this.logCatLogLevel = builder.logCatLogLevel;
         this.fileLogLevel = builder.fileLogLevel;
         this.topLevelTag = builder.topLevelTag;
+        this.jLog = builder.jLog;
         this.autoSaveLogToFile = builder.autoSaveLogToFile;
         this.showStackTraceInfo = builder.showStackTraceInfo;
         this.showFileTimeInfo = builder.showFileTimeInfo;

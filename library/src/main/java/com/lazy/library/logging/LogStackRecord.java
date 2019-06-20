@@ -158,10 +158,7 @@ final class LogStackRecord extends LogTransaction {
         String[] tags = new String[tagsList.size()];
         tagsList.toArray(tags);
         String msg = builder.toString();
-
-
-        Logcat.println(logLevel.value, jsonText, msg, filesName, fileAppend, tags);
-
+        Logcat.out(logLevel.value, jsonText, msg, filesName, fileAppend, tags);
         return this;
     }
 

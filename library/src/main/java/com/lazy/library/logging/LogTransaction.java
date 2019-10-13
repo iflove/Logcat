@@ -32,5 +32,10 @@ public abstract class LogTransaction {
      */
     public abstract LogTransaction append(boolean append);
 
+    /**
+     * 打印堆栈偏移位置
+     */
+    public abstract LogTransaction stackTrace(int offset);
+
     public abstract LogTransaction out();
 }

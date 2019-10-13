@@ -24,6 +24,7 @@ final class LogStackRecord extends LogTransaction {
     static final int OP_FORMAT = 7;
     static final int OP_JSON_FORMAT = 8;
     static final int OP_FILE_APPEND = 9;
+    static final int OP_STACKTRACE_OFFSET = 10;
 
     private final LogLevel logLevel;
 
@@ -93,12 +94,19 @@ final class LogStackRecord extends LogTransaction {
     }
 
     @Override
+    public LogTransaction stackTrace(int offset) {
+        doOp(OP_STACKTRACE_OFFSET, offset);
+        return this;
+    }
+
+    @Override
     public LogTransaction out() {
         List<Object> msgsList = new ArrayList<>();
         List<String> tagsList = new ArrayList<>();
         String filesName = null;
         String jsonText = null;
         boolean fileAppend = true;
+        int stackTraceOffset = 0;
 
         while (mHead != null) {
 
@@ -132,6 +140,9 @@ final class LogStackRecord extends LogTransaction {
                 case OP_FILE_APPEND:
                     fileAppend = ((boolean) mHead.obj);
                     break;
+                case OP_STACKTRACE_OFFSET:
+                    stackTraceOffset = ((int) mHead.obj);
+                    break;
                 default:
                     break;
             }
@@ -158,7 +169,7 @@ final class LogStackRecord extends LogTransaction {
         String[] tags = new String[tagsList.size()];
         tagsList.toArray(tags);
         String msg = builder.toString();
-        Logcat.out(logLevel.value, jsonText, msg, filesName, fileAppend, tags);
+        Logcat.out(logLevel.value, jsonText, msg, filesName, fileAppend, stackTraceOffset, tags);
         return this;
     }
 

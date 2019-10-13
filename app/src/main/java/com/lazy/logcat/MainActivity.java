@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         intent.setPackage(getPackageName());
         startService(intent);
 
+        println("MainPage");
         final ViewGroup levelViewGroup = findViewById(R.id.level);
         try {
             InputStream is = getAssets().open("cards.json");
@@ -171,5 +172,11 @@ public class MainActivity extends AppCompatActivity {
         String idName = s.substring(s.indexOf("/") + 1, s.length() - 1);
 
         Logcat.i(TAG_VIEW_CLICK_EVENT, "view id:" + idName + " clicked");
+    }
+
+
+    private void println(String msg) {
+        //warp to use stackTrace
+        Logcat.i().tag(TAG).msg(msg).stackTrace(1).out();
     }
 }

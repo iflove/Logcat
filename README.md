@@ -10,7 +10,7 @@
 
 ```groovy
 dependencies {
-    implementation 'com.github.iflove:Logcat:2.1.1'
+    implementation 'com.github.iflove:Logcat:2.1.2'
 }
 ```
 

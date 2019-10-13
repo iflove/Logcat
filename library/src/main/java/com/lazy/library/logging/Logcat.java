@@ -386,9 +386,9 @@ public final class Logcat {
     /**
      * 输出日志
      */
-    static void out(@LockLevel final int logLevel, @Nullable String jsonText, Object msg, final String filesName, final boolean append, String... tags) {
+    static void out(@LockLevel final int logLevel, @Nullable String jsonText, Object msg, final String filesName, final boolean append, int stackTraceOffset, String... tags) {
         if (NOT_SHOW_LOG != (logLevel & logCatShowLogType)) {
-            printLog(getStackTraceElement(INDEX), logLevel, msg, jsonText, tags);
+            printLog(getStackTraceElement(INDEX + stackTraceOffset), logLevel, msg, jsonText, tags);
         }
         boolean hasFile = filesName != null;
         if (hasFile) {

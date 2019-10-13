@@ -110,8 +110,7 @@ public final class JLog implements Handler.Callback {
             this.socket = new Socket(host, port);
             out = socket.getOutputStream();
         } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("init JLog error");
+            System.err.println("init JLog error " + e.getMessage());
         }
     }
 }

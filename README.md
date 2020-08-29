@@ -4,6 +4,7 @@
 这是一个Android 上 效率极高的 Log 工具，主要功能为控制不同级别的Log输出,Log信息保存到文件、打印行号、函数调用、Json解析、点击跳转、多标签Tag 支持无限长字符串打印，无Logcat4000字符限制等功能
 
  打印行号、函数调用、Json解析、点击跳转 参照[KLog](https://github.com/ZhaoKaiQiang/KLog) of [ZhaoKaiQiang](https://github.com/ZhaoKaiQiang).
+ 推荐:logExtlibrary 作为相关子模块块log的打印,主模块实现Logger接口相关方法
 
 ---
 ## Gradle
@@ -11,6 +12,8 @@
 ```groovy
 dependencies {
     implementation 'com.github.iflove:Logcat:2.1.2'
+    #子模块用
+    implementation 'com.github.iflove.Hunter:logExtlibrary:logExtlibrary-1.0'
 }
 ```
 
